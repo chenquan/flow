@@ -19,7 +19,6 @@
 package flow
 
 import (
-	"context"
 	"os"
 	"sync"
 )
@@ -28,23 +27,11 @@ var _ Data = (*os.File)(nil)
 
 // ChanData 数据流通道
 type ChanData chan Data
-type ChanInData <-chan Data
-type ChanOutData chan<- Data
 
-type ResultFunc func(Data)
+// ResultFunc 流结果处理函数
+type ResultFunc func(result Data)
 
-func NewInput(dataFlow Data) Node {
-	f := func(in Data) Data {
-		return in
-	}
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	return &FuncNode{
-		funcNode:   f,
-		ctx:        ctx,
-		cancelFunc: cancelFunc,
-	}
-}
-
+// Flow 流
 type Flow struct {
 	root Node
 	in   chan Data
@@ -53,6 +40,7 @@ type Flow struct {
 	wg   sync.WaitGroup
 }
 
+// NewFlow 新建一条流处理
 func NewFlow(buff int) *Flow {
 	f := func(in Data) Data {
 		return in
@@ -65,19 +53,21 @@ func NewFlow(buff int) *Flow {
 		out:  make(chan Data, buff),
 		buff: buff}
 }
-func (f *Flow) InputFlow() {
 
-}
-
+// FlowIn 数据流入流节点
 func (f *Flow) FlowIn(node Node) Node {
 	f.root.FlowIn(node)
 	return node
 }
+
+// FlowInWithFunc 数据流入函数流节点
 func (f *Flow) FlowInWithFunc(funcNode Func) Node {
 	node := NewFuncNode(funcNode)
 	f.root.FlowIn(node)
 	return node
 }
+
+// Run 建立流处理通道
 func (f *Flow) Run() {
 	node := f.root
 
@@ -105,17 +95,18 @@ func (f *Flow) Run() {
 
 }
 
+// Feed 喂入流处理数据
 func (f *Flow) Feed(inData Data, resultFunc ResultFunc) {
 	f.wg.Add(1)
-	go func(inData Data) {
-		f.in <- inData
-	}(inData)
+	f.in <- inData
 	go func(resultFunc func(inData Data)) {
 		resultFunc(<-f.out)
 		f.wg.Done()
 	}(resultFunc)
 
 }
+
+// Wait 等待全部流结束
 func (f *Flow) Wait() {
 	f.wg.Wait()
 }

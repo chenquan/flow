@@ -23,22 +23,22 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"os"
 	"strconv"
 	"sync/atomic"
 	"testing"
+	"time"
 )
 
-func TestFlow(t *testing.T) {
+func TestFlowBuffer(t *testing.T) {
 
 	var buffer bytes.Buffer
 	rand.Seed(2020)
-	//input := NewInput(&buffer)
 	i := 0
 	node1 := NewFuncNode(func(in Data) Data {
 		b := in.(*bytes.Buffer)
 		data, err := ioutil.ReadAll(b)
 		var buffer bytes.Buffer
-		//time.Sleep(time.Duration(rand.Intn(1)) * time.Second)
 
 		if err != nil {
 			fmt.Println("错误")
@@ -55,10 +55,11 @@ func TestFlow(t *testing.T) {
 		}
 
 	})
+
 	node2 := NewFuncNode(func(in Data) Data {
 		b := in.(*bytes.Buffer)
 
-		//time.Sleep(time.Duration(rand.Intn(2)) * time.Millisecond)
+		time.Sleep(2 * time.Millisecond)
 		data, err := ioutil.ReadAll(b)
 		var buffer bytes.Buffer
 		if err != nil {
@@ -73,12 +74,14 @@ func TestFlow(t *testing.T) {
 
 		return &buffer
 	})
-
 	flow := NewFlow(1)
 	flow2 := flow.FlowIn(node1)
 	flow2.FlowIn(node2)
 	flow.Run()
-
+	f, err := os.OpenFile("data.txt", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0664)
+	if err != nil {
+		return
+	}
 	var j int64 = 0
 	for i := 0; i < 10000; i++ {
 		flow.Feed(&buffer, func(data Data) {
@@ -86,6 +89,7 @@ func TestFlow(t *testing.T) {
 
 			dataBytes, err := ioutil.ReadAll(b)
 			if err == nil {
+				f.Write(dataBytes)
 				fmt.Println(string(dataBytes))
 			}
 			atomic.AddInt64(&j, 1)
@@ -93,4 +97,24 @@ func TestFlow(t *testing.T) {
 	}
 	flow.Wait()
 	fmt.Println("j:", j)
+}
+func TestFlowNumber(t *testing.T) {
+
+	flow := NewFlow(20)
+	flow1 := flow.FlowInWithFunc(func(in Data) Data {
+		b := in.(int)
+		return (rand.Intn(1000)) + b
+	})
+	flow1.FlowInWithFunc(func(in Data) Data {
+		b := in.(int)
+		return (rand.Intn(1000)) + b
+	})
+	flow.Run()
+
+	for i := 0; i < 1000; i++ {
+		flow.Feed(rand.Intn(100), func(data Data) {
+			fmt.Println(data)
+		})
+	}
+	flow.Wait()
 }

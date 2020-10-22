@@ -22,7 +22,6 @@ package flow
 type Node interface {
 	Next() Node             // 子计算流
 	Run(in Data) (out Data) //
-	//SetParentContext(ctx context.Context, cancelFunc context.CancelFunc)
 	FlowIn(node Node) Node
 	FlowInWithFunc(funcNode Func) Node
 }

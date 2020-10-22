@@ -18,56 +18,43 @@
 
 package flow
 
-import (
-	"context"
-	"sync"
-)
-
+// Func 节点处理函数
 type Func func(in Data) Data
 
 var _ Node = (*FuncNode)(nil)
 
-// FuncNode 函数计算流节点
+// FuncNode 函数流节点
 type FuncNode struct {
 	funcNode      Func
-	flow          bool // 是否已运行
 	nextFuncFlows Node // 子计算节点
 
-	ctx        context.Context
-	cancelFunc context.CancelFunc
-	mu         sync.RWMutex
 }
 
+// FlowInWithFunc 数据流入函数流节点
 func (f *FuncNode) FlowInWithFunc(funcNode Func) Node {
 	node := NewFuncNode(funcNode)
 	f.nextFuncFlows = node
 	return node
 }
 
+// NewFuncNode 新建一个函数流节点
 func NewFuncNode(funcNode Func) Node {
 	return &FuncNode{funcNode: funcNode}
 }
 
+// FlowIn 数据流入流节点
 func (f *FuncNode) FlowIn(node Node) Node {
-	//ctx, cancelFunc := context.WithCancel(f.ctx)
-	//node.SetParentContext(ctx, cancelFunc)
 	f.nextFuncFlows = node
 	return node
 }
 
+// Next 下一个流节点
 func (f *FuncNode) Next() Node {
 	return f.nextFuncFlows
 }
 
+// 执行流节点函数
 func (f *FuncNode) Run(in Data) (out Data) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	f.flow = true
 	out = f.funcNode(in)
 	return
-}
-
-func (f *FuncNode) SetParentContext(ctx context.Context, cancelFunc context.CancelFunc) {
-	f.ctx = ctx
-	f.cancelFunc = cancelFunc
 }
