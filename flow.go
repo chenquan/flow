@@ -42,8 +42,8 @@ type Flow struct {
 
 // NewFlow 新建一条流处理
 func NewFlow(buff int) *Flow {
-	f := func(in Data) Data {
-		return in
+	f := func(in Data) (Data, bool) {
+		return in, true
 	}
 	return &Flow{
 		root: &FuncNode{
@@ -55,15 +55,14 @@ func NewFlow(buff int) *Flow {
 }
 
 // FlowIn 数据流入流节点
-func (f *Flow) FlowIn(node Node) Node {
-	f.root.FlowIn(node)
+func (f *Flow) FlowInWithNode(node Node) Node {
+	f.root.FlowInWithNode(node)
 	return node
 }
 
 // FlowInWithFunc 数据流入函数流节点
-func (f *Flow) FlowInWithFunc(funcNode Func) Node {
-	node := NewFuncNode(funcNode)
-	f.root.FlowIn(node)
+func (f *Flow) FlowIn(funcNode Func) Node {
+	node := f.root.FlowIn(funcNode)
 	return node
 }
 
@@ -86,7 +85,16 @@ func (f *Flow) Run() {
 		go func(node Node) {
 			for data := range in {
 				go func(data Data) {
-					out <- node.Run(data)
+					// 确保每个协程执行完毕
+					f.wg.Add(1)
+					resultData, ok := node.Run(data)
+					if ok {
+						out <- resultData
+					} else {
+						// 当一个流被阻挡进行前进时,因避免在流的出口处 ResultFunc函数的等待
+						f.wg.Done()
+					}
+					f.wg.Done()
 				}(data)
 			}
 		}(node)

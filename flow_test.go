@@ -35,7 +35,11 @@ func TestFlowBuffer(t *testing.T) {
 	var buffer bytes.Buffer
 	rand.Seed(2020)
 	i := 0
-	node1 := NewFuncNode(func(in Data) Data {
+	//node1 := NewFuncNode()
+
+	//node2 := NewFuncNode()
+	flow := NewFlow(1)
+	flow2 := flow.FlowInWithFunc(func(in Data) (Data, bool) {
 		b := in.(*bytes.Buffer)
 		data, err := ioutil.ReadAll(b)
 		var buffer bytes.Buffer
@@ -43,7 +47,7 @@ func TestFlowBuffer(t *testing.T) {
 		if err != nil {
 			fmt.Println("错误")
 
-			return &buffer
+			return &buffer, true
 		} else {
 			var buffer bytes.Buffer
 
@@ -51,12 +55,11 @@ func TestFlowBuffer(t *testing.T) {
 			buffer.Write([]byte(d))
 			i++
 
-			return &buffer
+			return &buffer, true
 		}
 
 	})
-
-	node2 := NewFuncNode(func(in Data) Data {
+	flow2.FlowInWithFunc(func(in Data) (Data, bool) {
 		b := in.(*bytes.Buffer)
 
 		time.Sleep(2 * time.Millisecond)
@@ -64,7 +67,7 @@ func TestFlowBuffer(t *testing.T) {
 		var buffer bytes.Buffer
 		if err != nil {
 			fmt.Println("错误")
-			return &buffer
+			return &buffer, true
 		} else {
 
 			d := string(data) + "node2\n"
@@ -72,11 +75,9 @@ func TestFlowBuffer(t *testing.T) {
 
 		}
 
-		return &buffer
+		return &buffer, true
 	})
-	flow := NewFlow(1)
-	flow2 := flow.FlowIn(node1)
-	flow2.FlowIn(node2)
+
 	flow.Run()
 	f, err := os.OpenFile("data.txt", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0664)
 	if err != nil {
@@ -101,13 +102,13 @@ func TestFlowBuffer(t *testing.T) {
 func TestFlowNumber(t *testing.T) {
 
 	flow := NewFlow(20)
-	flow1 := flow.FlowInWithFunc(func(in Data) Data {
+	flow1 := flow.FlowInWithFunc(func(in Data) (Data, bool) {
 		b := in.(int)
-		return (rand.Intn(1000)) + b
+		return (rand.Intn(1000)) + b, true
 	})
-	flow1.FlowInWithFunc(func(in Data) Data {
+	flow1.FlowInWithFunc(func(in Data) (Data, bool) {
 		b := in.(int)
-		return (rand.Intn(1000)) + b
+		return (rand.Intn(1000)) + b, true
 	})
 	flow.Run()
 

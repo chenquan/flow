@@ -18,13 +18,4 @@
 
 package flow
 
-// Node 实现该接口的是计算流
-type Node interface {
-	Next() Node                      // 子计算流
-	Run(in Data) (out Data, ok bool) //
-	FlowIn(funcNode Func) Node
-	FlowInWithNode(node Node) Node
-}
-
-// Data 数据流
-type Data interface{}
+type Numerical struct{}

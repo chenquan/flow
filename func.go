@@ -19,7 +19,7 @@
 package flow
 
 // Func 节点处理函数
-type Func func(in Data) Data
+type Func func(in Data) (Data, bool)
 
 var _ Node = (*FuncNode)(nil)
 
@@ -31,7 +31,7 @@ type FuncNode struct {
 }
 
 // FlowInWithFunc 数据流入函数流节点
-func (f *FuncNode) FlowInWithFunc(funcNode Func) Node {
+func (f *FuncNode) FlowIn(funcNode Func) Node {
 	node := NewFuncNode(funcNode)
 	f.nextFuncFlows = node
 	return node
@@ -42,8 +42,8 @@ func NewFuncNode(funcNode Func) Node {
 	return &FuncNode{funcNode: funcNode}
 }
 
-// FlowIn 数据流入流节点
-func (f *FuncNode) FlowIn(node Node) Node {
+//// FlowIn 数据流入流节点
+func (f *FuncNode) FlowInWithNode(node Node) Node {
 	f.nextFuncFlows = node
 	return node
 }
@@ -54,7 +54,7 @@ func (f *FuncNode) Next() Node {
 }
 
 // 执行流节点函数
-func (f *FuncNode) Run(in Data) (out Data) {
-	out = f.funcNode(in)
+func (f *FuncNode) Run(in Data) (out Data, ok bool) {
+	out, ok = f.funcNode(in)
 	return
 }
