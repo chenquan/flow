@@ -19,7 +19,6 @@
 package image
 
 import (
-	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/yuanqi/flow"
 	"github.com/yuanqi/flow/ffile"
@@ -35,10 +34,18 @@ func TestImage(t *testing.T) {
 	pathFlow := newFlow.To(ffile.GetAllFiles(".jpg"))
 	openFlow := pathFlow.To(fimgae.OpenWithPath())
 	h1 := openFlow.To(fimgae.CropAnchor(300, 300, imaging.Center))
-	h1.To(fimgae.Invert())
-	//h2.To(fimgae.Grayscale())
+	h2 := h1.To(func(in flow.Data) (flow.Data, bool) {
+		return in, true
+	})
+	h2.To(func(in flow.Data) (flow.Data, bool) {
+		data, ok := fimgae.Grayscale()(in)
+		if ok {
+			return fimgae.Invert()(data)
+		}
+		return nil, false
+	})
 
-	newFlow.Run()
+	newFlow.Run(false)
 	paths := []string{"data/"}
 
 	rand.Seed(2020)
@@ -46,7 +53,6 @@ func TestImage(t *testing.T) {
 		newFlow.Feed(path, func(result flow.Data) {
 
 			if ims, ok := result.([]image.Image); ok {
-				fmt.Println(ims)
 				for _, im := range ims {
 					_ = imaging.Save(im, strconv.Itoa(rand.Int())+".jpg")
 				}

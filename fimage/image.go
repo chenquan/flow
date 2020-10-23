@@ -19,7 +19,6 @@
 package fimage
 
 import (
-	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/yuanqi/flow"
 	"image"
@@ -187,8 +186,6 @@ func Invert() flow.Func {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.Invert(im)
 		})
-		fmt.Println(ims)
-		fmt.Println(len(ims))
 		return ims, len(ims) != 0
 	}
 }

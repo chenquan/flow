@@ -76,7 +76,7 @@ func TestFlowBuffer(t *testing.T) {
 		return &buffer, true
 	})
 
-	flow.Run()
+	flow.Run(true)
 	f, err := os.OpenFile("data.txt", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0664)
 	if err != nil {
 		return
@@ -108,7 +108,7 @@ func TestFlowNumber(t *testing.T) {
 		b := in.(int)
 		return (rand.Intn(1000)) + b, true
 	})
-	flow.Run()
+	flow.Run(true)
 
 	for i := 0; i < 1000; i++ {
 		flow.Feed(rand.Intn(100), func(data Data) {

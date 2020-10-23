@@ -67,7 +67,7 @@ func (f *Flow) To(funcNode Func) Node {
 }
 
 // Run 建立流处理通道
-func (f *Flow) Run() {
+func (f *Flow) Run(coroutine bool) {
 	node := f.root
 
 	nodeChans := make([]ChanData, 0)
@@ -84,7 +84,7 @@ func (f *Flow) Run() {
 		out := nodeChans[i+1]
 		go func(node Node) {
 			for data := range in {
-				go func(data Data) {
+				f := func(data Data) {
 					// 确保每个协程执行完毕
 					f.wg.Add(1)
 					resultData, ok := node.Run(data)
@@ -95,7 +95,13 @@ func (f *Flow) Run() {
 						f.wg.Done()
 					}
 					f.wg.Done()
-				}(data)
+				}
+				if coroutine {
+					go f(data)
+				} else {
+					go f(data)
+
+				}
 			}
 		}(node)
 		node = node.Next()
