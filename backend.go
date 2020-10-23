@@ -22,8 +22,8 @@ package flow
 type Node interface {
 	Next() Node                      // 子计算流
 	Run(in Data) (out Data, ok bool) //
-	FlowIn(funcNode Func) Node
-	FlowInWithNode(node Node) Node
+	To(funcNode Func) Node
+	ToNode(node Node) Node
 }
 
 // Data 数据流

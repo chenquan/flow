@@ -35,11 +35,9 @@ func TestFlowBuffer(t *testing.T) {
 	var buffer bytes.Buffer
 	rand.Seed(2020)
 	i := 0
-	//node1 := NewFuncNode()
-
-	//node2 := NewFuncNode()
 	flow := NewFlow(1)
-	flow2 := flow.FlowIn(func(in Data) (Data, bool) {
+
+	flow2 := flow.To(func(in Data) (Data, bool) {
 		b := in.(*bytes.Buffer)
 		data, err := ioutil.ReadAll(b)
 		var buffer bytes.Buffer
@@ -59,7 +57,7 @@ func TestFlowBuffer(t *testing.T) {
 		}
 
 	})
-	flow2.FlowIn(func(in Data) (Data, bool) {
+	flow2.To(func(in Data) (Data, bool) {
 		b := in.(*bytes.Buffer)
 
 		time.Sleep(2 * time.Millisecond)
@@ -102,11 +100,11 @@ func TestFlowBuffer(t *testing.T) {
 func TestFlowNumber(t *testing.T) {
 
 	flow := NewFlow(20)
-	flow1 := flow.FlowIn(func(in Data) (Data, bool) {
+	flow1 := flow.To(func(in Data) (Data, bool) {
 		b := in.(int)
 		return (rand.Intn(1000)) + b, true
 	})
-	flow1.FlowIn(func(in Data) (Data, bool) {
+	flow1.To(func(in Data) (Data, bool) {
 		b := in.(int)
 		return (rand.Intn(1000)) + b, true
 	})

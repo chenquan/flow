@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/yuanqi/flow"
+	"github.com/yuanqi/flow/ffile"
 	fimgae "github.com/yuanqi/flow/fimage"
 	"image"
 	"math/rand"
@@ -31,10 +32,10 @@ import (
 
 func TestImage(t *testing.T) {
 	newFlow := flow.NewFlow(10)
-	pathFlow := newFlow.FlowIn(fimgae.GetAllFiles(".jpg"))
-	openFlow := pathFlow.FlowIn(fimgae.OpenWithPath())
-	h1 := openFlow.FlowIn(fimgae.CropAnchor(300, 300, imaging.Center))
-	h1.FlowIn(fimgae.CropAnchor(100, 300, imaging.Bottom))
+	pathFlow := newFlow.To(ffile.GetAllFiles(".jpg"))
+	openFlow := pathFlow.To(fimgae.OpenWithPath())
+	h1 := openFlow.To(fimgae.CropAnchor(300, 300, imaging.Center))
+	h1.To(fimgae.CropAnchor(100, 300, imaging.Bottom))
 
 	newFlow.Run()
 	paths := []string{"data/", "a/"}

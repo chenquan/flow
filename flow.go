@@ -55,14 +55,14 @@ func NewFlow(buff int) *Flow {
 }
 
 // FlowIn 数据流入流节点
-func (f *Flow) FlowInWithNode(node Node) Node {
-	f.root.FlowInWithNode(node)
+func (f *Flow) ToNode(node Node) Node {
+	f.root.ToNode(node)
 	return node
 }
 
 // FlowInWithFunc 数据流入函数流节点
-func (f *Flow) FlowIn(funcNode Func) Node {
-	node := f.root.FlowIn(funcNode)
+func (f *Flow) To(funcNode Func) Node {
+	node := f.root.To(funcNode)
 	return node
 }
 
