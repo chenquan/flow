@@ -19,7 +19,7 @@
 package ffile
 
 import (
-	"github.com/yuanqi/flow"
+	"github.com/yunqi/flow"
 	"io/ioutil"
 	"os"
 	"path"

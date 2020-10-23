@@ -20,7 +20,7 @@ package fimage
 
 import (
 	"github.com/disintegration/imaging"
-	"github.com/yuanqi/flow"
+	"github.com/yunqi/flow"
 	"image"
 )
 

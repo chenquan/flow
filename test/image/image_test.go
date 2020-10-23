@@ -20,9 +20,9 @@ package image
 
 import (
 	"github.com/disintegration/imaging"
-	"github.com/yuanqi/flow"
-	"github.com/yuanqi/flow/ffile"
-	fimgae "github.com/yuanqi/flow/fimage"
+	"github.com/yunqi/flow"
+	"github.com/yunqi/flow/ffile"
+	"github.com/yunqi/flow/fimage"
 	"image"
 	"math/rand"
 	"strconv"
@@ -32,15 +32,15 @@ import (
 func TestImage(t *testing.T) {
 	newFlow := flow.NewFlow(10)
 	pathFlow := newFlow.To(ffile.GetAllFiles(".jpg"))
-	openFlow := pathFlow.To(fimgae.OpenWithPath())
-	h1 := openFlow.To(fimgae.CropAnchor(300, 300, imaging.Center))
+	openFlow := pathFlow.To(fimage.OpenWithPath())
+	h1 := openFlow.To(fimage.CropAnchor(300, 300, imaging.Center))
 	h2 := h1.To(func(in flow.Data) (flow.Data, bool) {
 		return in, true
 	})
 	h2.To(func(in flow.Data) (flow.Data, bool) {
-		data, ok := fimgae.Grayscale()(in)
+		data, ok := fimage.Grayscale()(in)
 		if ok {
-			return fimgae.Invert()(data)
+			return fimage.Invert()(data)
 		}
 		return nil, false
 	})

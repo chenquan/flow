@@ -1,4 +1,4 @@
-module github.com/yuanqi/flow
+module github.com/yunqi/flow
 
 go 1.14
 
