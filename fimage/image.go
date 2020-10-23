@@ -19,6 +19,7 @@
 package fimage
 
 import (
+	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/yuanqi/flow"
 	"image"
@@ -81,7 +82,7 @@ func toImages(in flow.Data) (images []image.Image) {
 }
 
 // handleImages 使用处理函数去处理 image.Image
-func handleImages(in flow.Data, handle func(im image.Image) *image.NRGBA) (ims []*image.NRGBA) {
+func handleImages(in flow.Data, handle func(im image.Image) *image.NRGBA) (ims []image.Image) {
 	for _, im := range toImages(in) {
 		newIm := handle(im)
 		ims = append(ims, newIm)
@@ -186,6 +187,8 @@ func Invert() flow.Func {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.Invert(im)
 		})
+		fmt.Println(ims)
+		fmt.Println(len(ims))
 		return ims, len(ims) != 0
 	}
 }

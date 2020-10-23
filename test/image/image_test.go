@@ -35,14 +35,16 @@ func TestImage(t *testing.T) {
 	pathFlow := newFlow.To(ffile.GetAllFiles(".jpg"))
 	openFlow := pathFlow.To(fimgae.OpenWithPath())
 	h1 := openFlow.To(fimgae.CropAnchor(300, 300, imaging.Center))
-	h1.To(fimgae.CropAnchor(100, 300, imaging.Bottom))
+	h1.To(fimgae.Invert())
+	//h2.To(fimgae.Grayscale())
 
 	newFlow.Run()
-	paths := []string{"data/", "a/"}
+	paths := []string{"data/"}
 
 	rand.Seed(2020)
 	for _, path := range paths {
 		newFlow.Feed(path, func(result flow.Data) {
+
 			if ims, ok := result.([]image.Image); ok {
 				fmt.Println(ims)
 				for _, im := range ims {

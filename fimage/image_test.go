@@ -221,9 +221,9 @@ func TestResize(t *testing.T) {
 
 			got := Resize(tc.w, tc.h, tc.f)
 			ims, _ := got(tc.src)
-			newIms := ims.([]*image.NRGBA)
-			for _, im := range newIms {
-				if !compareNRGBA(im, tc.want, 0) {
+			imss := ims.([]image.Image)
+			for _, im := range imss {
+				if !compareNRGBA(im.(*image.NRGBA), tc.want, 0) {
 					t.Fatalf("got result %#v want %#v", got, tc.want)
 				}
 			}
@@ -254,10 +254,10 @@ func TestResampleFilters(t *testing.T) {
 			src := image.NewNRGBA(image.Rect(-1, -1, 2, 3))
 			got := Resize(5, 6, filter)
 			ims, _ := got(src)
-			newIms := ims.([]*image.NRGBA)
+			newIms := ims.([]image.Image)
 
 			want := image.NewNRGBA(image.Rect(0, 0, 5, 6))
-			if !compareNRGBA(newIms[0], want, 0) {
+			if !compareNRGBA(newIms[0].(*image.NRGBA), want, 0) {
 				t.Fatalf("got result %#v want %#v", got, want)
 			}
 			if filter.Kernel != nil {
