@@ -16,31 +16,31 @@
  *
  */
 
-package utils
+package file
 
 import (
+	"fmt"
 	"github.com/yunqi/flow"
-	"os"
+	"github.com/yunqi/flow/function/ffile"
+	"testing"
 )
 
-func ToStrings(in *flow.Context) (strs []string) {
-	data := in.Get()
-	switch data.(type) {
-	case string:
-		strs = append(strs, data.(string))
-	case []string:
-		strs = append(strs, data.([]string)...)
-	}
-	return
-}
-func ToFiles(in *flow.Context) (files []*os.File) {
-	data := in.Get()
+func TestImage(t *testing.T) {
+	newFlow := flow.NewFlow(10)
+	newFlow.To(ffile.GetAllFiles(".jpg"))
+	//openFlow := pathFlow.To(ffile.OpenFile(os.O_RDWR, 0664))
+	//openFlow.To(ffile.GetSize())
 
-	switch data.(type) {
-	case *os.File:
-		files = append(files, data.(*os.File))
-	case []*os.File:
-		files = append(files, data.([]*os.File)...)
+	newFlow.Run(false)
+	paths := []string{"data/", "d", "11/", "../"}
+
+	for _, path := range paths {
+
+		newFlow.Feed(path, func(result *flow.Context) {
+			fmt.Println(result)
+
+		})
 	}
-	return
+
+	newFlow.Wait()
 }

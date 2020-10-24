@@ -54,7 +54,7 @@ func OpenWithPath() flow.Func {
 		}
 		return nil, err
 	}
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		var ims []image.Image
 		for _, pathName := range utils.ToStrings(in) {
 			if im, err := f(pathName); err == nil {
@@ -72,7 +72,7 @@ func OpenWithPath() flow.Func {
 
 // CropAnchor 裁剪
 func CropAnchor(width, height int, anchor imaging.Anchor) flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		var ims []image.Image
 		for _, im := range toImages(in) {
 			newIm := imaging.CropAnchor(im, width, height, anchor)
@@ -89,7 +89,7 @@ func CropAnchor(width, height int, anchor imaging.Anchor) flow.Func {
 }
 
 // toImages 转为 []image.Image
-func toImages(in *flow.Data) (images []image.Image) {
+func toImages(in *flow.Context) (images []image.Image) {
 	data := in.Get()
 	switch data.(type) {
 	case image.Image:
@@ -101,7 +101,7 @@ func toImages(in *flow.Data) (images []image.Image) {
 }
 
 // handleImages 使用处理函数去处理 image.Image
-func handleImages(in *flow.Data, handle func(im image.Image) *image.NRGBA) (ims []image.Image) {
+func handleImages(in *flow.Context, handle func(im image.Image) *image.NRGBA) (ims []image.Image) {
 	for _, im := range toImages(in) {
 		newIm := handle(im)
 		ims = append(ims, newIm)
@@ -111,7 +111,7 @@ func handleImages(in *flow.Data, handle func(im image.Image) *image.NRGBA) (ims 
 
 // Resize 调整图片大小
 func Resize(width, height int, filter imaging.ResampleFilter) flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.Resize(im, width, height, filter)
 		})
@@ -127,7 +127,7 @@ func Resize(width, height int, filter imaging.ResampleFilter) flow.Func {
 
 // Fit 按比例缩小图像使用指定的重采样滤波器，以适应指定的最大宽度和高度
 func Fit(width, height int, filter imaging.ResampleFilter) flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.Fit(im, width, height, filter)
 		})
@@ -142,7 +142,7 @@ func Fit(width, height int, filter imaging.ResampleFilter) flow.Func {
 
 // Fill 调整并裁剪图片
 func Fill(width, height int, anchor imaging.Anchor, filter imaging.ResampleFilter) flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.Fill(im, width, height, anchor, filter)
 		})
@@ -157,7 +157,7 @@ func Fill(width, height int, anchor imaging.Anchor, filter imaging.ResampleFilte
 
 // Sharpen 会生成图像的锐化版本
 func Sharpen(sigma float64) flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.Sharpen(im, sigma)
 		})
@@ -172,7 +172,7 @@ func Sharpen(sigma float64) flow.Func {
 
 // AdjustGamma 对图像执行gamma校正,然后返回调整后的图像
 func AdjustGamma(gamma float64) flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.AdjustGamma(im, gamma)
 		})
@@ -188,7 +188,7 @@ func AdjustGamma(gamma float64) flow.Func {
 
 // AdjustContrast 使用percent参数更改图像的对比度,并返回调整后的图像
 func AdjustContrast(percentage float64) flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.AdjustContrast(im, percentage)
 		})
@@ -205,7 +205,7 @@ func AdjustContrast(percentage float64) flow.Func {
 
 // AdjustBrightness 使用percentage参数更改图像的亮度,并返回调整后的图像
 func AdjustBrightness(percentage float64) flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.AdjustBrightness(im, percentage)
 		})
@@ -222,7 +222,7 @@ func AdjustBrightness(percentage float64) flow.Func {
 
 // AdjustSaturation 使用percentage参数更改图像的饱和度,并返回调整后的图像
 func AdjustSaturation(percentage float64) flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.AdjustSaturation(im, percentage)
 		})
@@ -238,7 +238,7 @@ func AdjustSaturation(percentage float64) flow.Func {
 
 // Blur 使用高斯函数,生成图像的模糊版本
 func Blur(sigma float64) flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.Blur(im, sigma)
 		})
@@ -253,7 +253,7 @@ func Blur(sigma float64) flow.Func {
 
 // Invert 会生成图像的反转版本
 func Invert() flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.Invert(im)
 		})
@@ -269,7 +269,7 @@ func Invert() flow.Func {
 
 // Grayscale 产生图像的灰度版本
 func Grayscale() flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.Grayscale(im)
 		})
@@ -286,7 +286,7 @@ func Grayscale() flow.Func {
 // Convolve3x3 使用指定的3x3卷积内核对图像进行卷积
 func Convolve3x3(kernel [9]float64, options *imaging.ConvolveOptions) flow.Func {
 
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.Convolve3x3(
 				im,
@@ -305,7 +305,7 @@ func Convolve3x3(kernel [9]float64, options *imaging.ConvolveOptions) flow.Func 
 
 // Paste 将img图像粘贴到指定位置的背景图像，然后返回合并的图像
 func Paste(img image.Image, pos image.Point) flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		ims := handleImages(in, func(im image.Image) *image.NRGBA {
 			return imaging.Paste(im, img, pos)
 		})

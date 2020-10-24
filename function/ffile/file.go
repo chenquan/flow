@@ -19,6 +19,7 @@
 package ffile
 
 import (
+	"fmt"
 	"github.com/yunqi/flow"
 	"github.com/yunqi/flow/function/utils"
 	"io/ioutil"
@@ -57,7 +58,7 @@ func getAllFiles(dirPath string, suffix string) (files []string, err error) {
 // GetAllFiles 获取指定后缀名的文件路径
 func GetAllFiles(suffix string) flow.Func {
 
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		if dirPath, ok := in.Get().(string); ok {
 			files, err := getAllFiles(dirPath, suffix)
 			if err == nil {
@@ -75,7 +76,7 @@ func GetAllFiles(suffix string) flow.Func {
 
 // OpenFile 打开文件
 func OpenFile(flag int, perm os.FileMode) flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		var files []*os.File
 		for _, s := range utils.ToStrings(in) {
 			f, err := os.OpenFile(s, flag, perm)
@@ -94,7 +95,7 @@ func OpenFile(flag int, perm os.FileMode) flow.Func {
 
 //
 func MkDir(perm os.FileMode) flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 		var dirs []string
 		for _, s := range utils.ToStrings(in) {
 			err := os.MkdirAll(s, perm)
@@ -116,9 +117,13 @@ type FileSize struct {
 	Size     int
 }
 
+func (f *FileSize) String() string {
+	return fmt.Sprintf("{Filename:%s, Size:%d}", f.Filename, f.Size)
+}
+
 //
 func GetSize() flow.Func {
-	return func(in *flow.Data) *flow.Data {
+	return func(in *flow.Context) *flow.Context {
 
 		fileSizes := make([]*FileSize, 0)
 		for _, file := range utils.ToFiles(in) {

@@ -26,46 +26,48 @@ import (
 
 // Node 实现该接口的是计算流
 type Node interface {
-	Next() Node               // 子计算流
-	Run(in *Data) (out *Data) //
+	Next() Node                     // 子计算流
+	Run(in *Context) (out *Context) //
 	To(funcNode Func) Node
 	ToNode(node Node) Node
 }
 
-// Data 数据流
-type Data struct {
+// Context 流处理上下文
+type Context struct {
 	flowId string
 	data   interface{}
+	step   int32
 	err    error
 }
 
-func (d *Data) String() string {
+func (d *Context) String() string {
 	if d.err != nil {
-		return fmt.Sprintf("{ flowId:%s,data:%v, err:%v}", d.flowId, d.data, d.err)
+		return fmt.Sprintf("{ flowId:%s, step:%d, data:%v, err:%v}", d.flowId, d.step, d.data, d.err)
 	} else {
-		return fmt.Sprintf("{ flowId:%s,data:%v}", d.flowId, d.data)
+		return fmt.Sprintf("{ flowId:%s, step:%d, data:%v}", d.flowId, d.step, d.data)
 	}
 }
 
-func NewData(data interface{}) *Data {
+func NewData(data interface{}) *Context {
 	flowId := strings.ReplaceAll(uuid.Must(uuid.NewV4(), nil).String(), "-", "")
-	return &Data{
+	return &Context{
 		data:   data,
 		flowId: flowId,
+		step:   -1,
 	}
 }
-func (d *Data) Get() interface{} {
+func (d *Context) Get() interface{} {
 	return d.data
 }
-func (d *Data) Set(data interface{}) {
+func (d *Context) Set(data interface{}) {
 	d.data = data
 }
-func (d *Data) Err() error {
+func (d *Context) Err() error {
 	return d.err
 }
-func (d *Data) SetErr(err error) {
+func (d *Context) SetErr(err error) {
 	d.err = err
 }
-func (d *Data) FlowId() string {
+func (d *Context) FlowId() string {
 	return d.flowId
 }

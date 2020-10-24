@@ -35,10 +35,10 @@ func TestImage(t *testing.T) {
 	pathFlow := newFlow.To(ffile.GetAllFiles(".jpg"))
 	openFlow := pathFlow.To(fimage.OpenWithPath())
 	h1 := openFlow.To(fimage.CropAnchor(300, 300, imaging.Center))
-	h2 := h1.To(func(in *flow.Data) *flow.Data {
+	h2 := h1.To(func(in *flow.Context) *flow.Context {
 		return in
 	})
-	h2.To(func(in *flow.Data) *flow.Data {
+	h2.To(func(in *flow.Context) *flow.Context {
 		data := fimage.Grayscale()(in)
 		if data.Err() == nil {
 			return fimage.Invert()(data)
@@ -48,12 +48,12 @@ func TestImage(t *testing.T) {
 	})
 
 	newFlow.Run(false)
-	paths := []string{"data/", "d", "11/", "../"}
+	paths := []string{"data/", "d", "11/"}
 
 	rand.Seed(2020)
 	for _, path := range paths {
 
-		newFlow.Feed(path, func(result *flow.Data) {
+		newFlow.Feed(path, func(result *flow.Context) {
 			fmt.Println(result)
 
 			if ims, ok := result.Get().([]image.Image); ok {

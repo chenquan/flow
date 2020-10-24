@@ -20,34 +20,35 @@ package flow
 
 import (
 	"sync"
+	"sync/atomic"
 )
 
 // ChanData 数据流通道
-type ChanData chan *Data
+type ChanData chan *Context
 
 // ResultFunc 流结果处理函数
-type ResultFunc func(result *Data)
+type ResultFunc func(result *Context)
 
 // Flow 流
 type Flow struct {
 	root Node
-	in   chan *Data
-	out  chan *Data
+	in   chan *Context
+	out  chan *Context
 	buff int
 	wg   sync.WaitGroup
 }
 
 // NewFlow 新建一条流处理
 func NewFlow(buff int) *Flow {
-	f := func(in *Data) *Data {
+	f := func(in *Context) *Context {
 		return in
 	}
 	return &Flow{
 		root: &FuncNode{
 			funcNode: f,
 		},
-		in:   make(chan *Data, buff),
-		out:  make(chan *Data, buff),
+		in:   make(chan *Context, buff),
+		out:  make(chan *Context, buff),
 		buff: buff}
 }
 
@@ -81,7 +82,7 @@ func (f *Flow) Run(coroutine bool) {
 		out := nodeChans[i+1]
 		go func(node Node) {
 			for data := range in {
-				f := func(data *Data) {
+				f := func(data *Context) {
 					// 确保每个协程执行完毕
 					f.wg.Add(1)
 					resultData := node.Run(data)
@@ -91,6 +92,7 @@ func (f *Flow) Run(coroutine bool) {
 						// 将错误信息发送给输出通道
 						f.out <- resultData
 					}
+					atomic.AddInt32(&resultData.step, 1)
 					f.wg.Done()
 				}
 				if coroutine {
@@ -111,7 +113,7 @@ func (f *Flow) Feed(inData interface{}, resultFunc ResultFunc) string {
 	f.wg.Add(1)
 	data := NewData(inData)
 	f.in <- data
-	go func(resultFunc func(inData *Data)) {
+	go func(resultFunc func(inData *Context)) {
 		resultFunc(<-f.out)
 		f.wg.Done()
 	}(resultFunc)
@@ -119,10 +121,10 @@ func (f *Flow) Feed(inData interface{}, resultFunc ResultFunc) string {
 }
 
 // Feed 喂入流处理数据
-func (f *Flow) FeedData(inData *Data, resultFunc ResultFunc) string {
+func (f *Flow) FeedData(inData *Context, resultFunc ResultFunc) string {
 	f.wg.Add(1)
 	f.in <- inData
-	go func(resultFunc func(inData *Data)) {
+	go func(resultFunc func(inData *Context)) {
 		resultFunc(<-f.out)
 		f.wg.Done()
 	}(resultFunc)
