@@ -35,16 +35,13 @@ func TestImage(t *testing.T) {
 	pathFlow := newFlow.To(ffile.GetAllFiles(".jpg"))
 	openFlow := pathFlow.To(fimage.OpenWithPath())
 	h1 := openFlow.To(fimage.CropAnchor(300, 300, imaging.Center))
-	h2 := h1.To(func(in *flow.Context) *flow.Context {
-		return in
+	h2 := h1.To(func(ctx *flow.Context) {
 	})
-	h2.To(func(in *flow.Context) *flow.Context {
-		data := fimage.Grayscale()(in)
-		if data.Err() == nil {
-			return fimage.Invert()(data)
+	h2.To(func(ctx *flow.Context) {
+		fimage.Grayscale()(ctx)
+		if ctx.Err() == nil {
+			fimage.Invert()(ctx)
 		}
-		fmt.Println("h2", data.Err())
-		return data
 	})
 
 	newFlow.Run(false)

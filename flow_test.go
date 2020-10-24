@@ -37,7 +37,7 @@ func TestFlowBuffer(t *testing.T) {
 	i := 0
 	flow := NewFlow(1)
 
-	flow2 := flow.To(func(in *Context) *Context {
+	flow2 := flow.To(func(in *Context) {
 		b := in.Get().(*bytes.Buffer)
 		data, err := ioutil.ReadAll(b)
 
@@ -53,10 +53,9 @@ func TestFlowBuffer(t *testing.T) {
 			in.Set(buffer)
 
 		}
-		return in
 
 	})
-	flow2.To(func(in *Context) *Context {
+	flow2.To(func(in *Context) {
 		b := in.Get().(bytes.Buffer)
 
 		time.Sleep(2 * time.Millisecond)
@@ -70,7 +69,6 @@ func TestFlowBuffer(t *testing.T) {
 			buffer.Write([]byte(d))
 			in.Set(buffer)
 		}
-		return in
 	})
 
 	flow.Run(true)
@@ -97,15 +95,13 @@ func TestFlowBuffer(t *testing.T) {
 func TestFlowNumber(t *testing.T) {
 
 	flow := NewFlow(20)
-	flow1 := flow.To(func(in *Context) *Context {
+	flow1 := flow.To(func(in *Context) {
 		b := in.Get().(int)
 		in.Set((rand.Intn(1000)) + b)
-		return in
 	})
-	flow1.To(func(in *Context) *Context {
+	flow1.To(func(in *Context) {
 		b := in.Get().(int)
 		in.Set((rand.Intn(1000)) + b)
-		return in
 	})
 	flow.Run(true)
 

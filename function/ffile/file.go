@@ -58,7 +58,7 @@ func getAllFiles(dirPath string, suffix string) (files []string, err error) {
 // GetAllFiles 获取指定后缀名的文件路径
 func GetAllFiles(suffix string) flow.Func {
 
-	return func(in *flow.Context) *flow.Context {
+	return func(in *flow.Context) {
 		if dirPath, ok := in.Get().(string); ok {
 			files, err := getAllFiles(dirPath, suffix)
 			if err == nil {
@@ -70,13 +70,12 @@ func GetAllFiles(suffix string) flow.Func {
 		} else {
 			in.SetErr(flow.Error)
 		}
-		return in
 	}
 }
 
 // OpenFile 打开文件
 func OpenFile(flag int, perm os.FileMode) flow.Func {
-	return func(in *flow.Context) *flow.Context {
+	return func(in *flow.Context) {
 		var files []*os.File
 		for _, s := range utils.ToStrings(in) {
 			f, err := os.OpenFile(s, flag, perm)
@@ -89,13 +88,12 @@ func OpenFile(flag int, perm os.FileMode) flow.Func {
 		} else {
 			in.SetErr(flow.Error)
 		}
-		return in
 	}
 }
 
 //
 func MkDir(perm os.FileMode) flow.Func {
-	return func(in *flow.Context) *flow.Context {
+	return func(in *flow.Context) {
 		var dirs []string
 		for _, s := range utils.ToStrings(in) {
 			err := os.MkdirAll(s, perm)
@@ -108,7 +106,6 @@ func MkDir(perm os.FileMode) flow.Func {
 		} else {
 			in.SetErr(flow.Error)
 		}
-		return in
 	}
 }
 
@@ -123,7 +120,7 @@ func (f *FileSize) String() string {
 
 //
 func GetSize() flow.Func {
-	return func(in *flow.Context) *flow.Context {
+	return func(in *flow.Context) {
 
 		fileSizes := make([]*FileSize, 0)
 		for _, file := range utils.ToFiles(in) {
@@ -141,7 +138,5 @@ func GetSize() flow.Func {
 		} else {
 			in.SetErr(flow.Error)
 		}
-		return in
-
 	}
 }

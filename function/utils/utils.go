@@ -23,8 +23,8 @@ import (
 	"os"
 )
 
-func ToStrings(in *flow.Context) (strs []string) {
-	data := in.Get()
+func ToStrings(ctx *flow.Context) (strs []string) {
+	data := ctx.Get()
 	switch data.(type) {
 	case string:
 		strs = append(strs, data.(string))
@@ -33,8 +33,8 @@ func ToStrings(in *flow.Context) (strs []string) {
 	}
 	return
 }
-func ToFiles(in *flow.Context) (files []*os.File) {
-	data := in.Get()
+func ToFiles(ctx *flow.Context) (files []*os.File) {
+	data := ctx.Get()
 
 	switch data.(type) {
 	case *os.File:

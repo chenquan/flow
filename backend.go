@@ -26,8 +26,8 @@ import (
 
 // Node 实现该接口的是计算流
 type Node interface {
-	Next() Node                     // 子计算流
-	Run(in *Context) (out *Context) //
+	Next() Node      // 子计算流
+	Run(in *Context) //
 	To(funcNode Func) Node
 	ToNode(node Node) Node
 }
@@ -48,7 +48,7 @@ func (d *Context) String() string {
 	}
 }
 
-func NewData(data interface{}) *Context {
+func NewContext(data interface{}) *Context {
 	flowId := strings.ReplaceAll(uuid.Must(uuid.NewV4(), nil).String(), "-", "")
 	return &Context{
 		data:   data,

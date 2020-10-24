@@ -40,8 +40,8 @@ type Flow struct {
 
 // NewFlow 新建一条流处理
 func NewFlow(buff int) *Flow {
-	f := func(in *Context) *Context {
-		return in
+	f := func(in *Context) {
+
 	}
 	return &Flow{
 		root: &FuncNode{
@@ -81,24 +81,24 @@ func (f *Flow) Run(coroutine bool) {
 		in := nodeChans[i]
 		out := nodeChans[i+1]
 		go func(node Node) {
-			for data := range in {
-				f := func(data *Context) {
+			for ctx := range in {
+				f := func(ctx *Context) {
 					// 确保每个协程执行完毕
 					f.wg.Add(1)
-					resultData := node.Run(data)
-					if resultData.Err() == nil {
-						out <- resultData
+					node.Run(ctx)
+					if ctx.Err() == nil {
+						out <- ctx
 					} else {
 						// 将错误信息发送给输出通道
-						f.out <- resultData
+						f.out <- ctx
 					}
-					atomic.AddInt32(&resultData.step, 1)
+					atomic.AddInt32(&ctx.step, 1)
 					f.wg.Done()
 				}
 				if coroutine {
-					go f(data)
+					go f(ctx)
 				} else {
-					f(data)
+					f(ctx)
 
 				}
 			}
@@ -111,7 +111,7 @@ func (f *Flow) Run(coroutine bool) {
 // Feed 喂入流处理数据
 func (f *Flow) Feed(inData interface{}, resultFunc ResultFunc) string {
 	f.wg.Add(1)
-	data := NewData(inData)
+	data := NewContext(inData)
 	f.in <- data
 	go func(resultFunc func(inData *Context)) {
 		resultFunc(<-f.out)
@@ -121,14 +121,14 @@ func (f *Flow) Feed(inData interface{}, resultFunc ResultFunc) string {
 }
 
 // Feed 喂入流处理数据
-func (f *Flow) FeedData(inData *Context, resultFunc ResultFunc) string {
+func (f *Flow) FeedData(ctx *Context, resultFunc ResultFunc) string {
 	f.wg.Add(1)
-	f.in <- inData
-	go func(resultFunc func(inData *Context)) {
+	f.in <- ctx
+	go func(resultFunc func(ctx *Context)) {
 		resultFunc(<-f.out)
 		f.wg.Done()
 	}(resultFunc)
-	return inData.FlowId()
+	return ctx.FlowId()
 }
 
 // Wait 等待全部流结束
