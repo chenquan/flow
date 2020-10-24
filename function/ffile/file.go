@@ -91,7 +91,7 @@ func OpenFile(flag int, perm os.FileMode) flow.Func {
 	}
 }
 
-//
+// MkDir 创建文件夹
 func MkDir(perm os.FileMode) flow.Func {
 	return func(in *flow.Context) {
 		var dirs []string
@@ -118,7 +118,7 @@ func (f *FileSize) String() string {
 	return fmt.Sprintf("{Filename:%s, Size:%d}", f.Filename, f.Size)
 }
 
-//
+// GetSize 获取文件大小
 func GetSize() flow.Func {
 	return func(ctx *flow.Context) {
 
@@ -135,6 +135,21 @@ func GetSize() flow.Func {
 		}
 		if len(fileSizes) != 0 {
 			ctx.SetData(fileSizes)
+		} else {
+			ctx.SetErr(flow.Error)
+		}
+	}
+}
+
+// GetExt 获取文件后辍名
+func GetExt() flow.Func {
+	return func(ctx *flow.Context) {
+		var exts []string
+		for _, fileName := range utils.ToStrings(ctx) {
+			exts = append(exts, path.Ext(fileName))
+		}
+		if len(exts) != 0 {
+			ctx.SetData(exts)
 		} else {
 			ctx.SetErr(flow.Error)
 		}

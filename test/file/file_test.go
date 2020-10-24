@@ -39,7 +39,6 @@ func TestImage(t *testing.T) {
 
 		newFlow.Feed(path, func(result *flow.Context) {
 			fmt.Println(result)
-
 		})
 	}
 

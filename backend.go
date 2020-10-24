@@ -44,11 +44,11 @@ type Context struct {
 	once   sync.Once              // err 只能被更改一次
 }
 
-func (d *Context) String() string {
-	if d.err != nil {
-		return fmt.Sprintf("{ flowId:%s, step:%d, data:%v, err:%v}", d.flowId, d.step, d.data, d.err)
+func (c *Context) String() string {
+	if c.err != nil {
+		return fmt.Sprintf("{ flowId:%s, step:%c, data:%v, err:%v}", c.flowId, c.step, c.data, c.err)
 	} else {
-		return fmt.Sprintf("{ flowId:%s, step:%d, data:%v}", d.flowId, d.step, d.data)
+		return fmt.Sprintf("{ flowId:%s, step:%c, data:%v}", c.flowId, c.step, c.data)
 	}
 }
 
@@ -64,54 +64,47 @@ func NewContext(data interface{}) *Context {
 
 // Data 返回数据
 // 并发不安全
-func (d *Context) Data() interface{} {
-	return d.data
+func (c *Context) Data() interface{} {
+	return c.data
 }
 
 // SetData 修改数据
 // 并发不安全
-func (d *Context) SetData(data interface{}) {
-	d.data = data
+func (c *Context) SetData(data interface{}) {
+	c.data = data
 }
 
-//func (d *Context) Data() interface{} {
-//	return d.data
-//}
-//
-//func (d *Context) SetData(data interface{}) {
-//	d.data = data
-//}
 // Err 返回错误信息
-func (d *Context) Err() error {
-	return d.err
+func (c *Context) Err() error {
+	return c.err
 }
 
 // SetErr 设置错误信息
 // 只能被设置一次非nil错误信息
-func (d *Context) SetErr(err error) {
+func (c *Context) SetErr(err error) {
 	if err != nil {
-		d.once.Do(func() {
-			d.err = err
+		c.once.Do(func() {
+			c.err = err
 		})
 	}
 
 }
 
 // FlowId 返回流处理ID
-func (d *Context) FlowId() string {
-	return d.flowId
+func (c *Context) FlowId() string {
+	return c.flowId
 }
 
 // SetCache 设置缓存
-func (d *Context) SetCache(key string, value interface{}) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	d.cache[key] = value
+func (c *Context) SetCache(key string, value interface{}) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cache[key] = value
 }
 
 // GetCache 返回对应 key 的缓存值
-func (d *Context) GetCache(key string) (value interface{}) {
-	d.mu.RLock()
-	defer d.mu.RUnlock()
-	return d.cache[key]
+func (c *Context) GetCache(key string) (value interface{}) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.cache[key]
 }
