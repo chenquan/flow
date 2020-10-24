@@ -37,43 +37,40 @@ func TestFlowBuffer(t *testing.T) {
 	i := 0
 	flow := NewFlow(1)
 
-	flow2 := flow.To(func(in Data) (Data, error) {
-		b := in.(*bytes.Buffer)
+	flow2 := flow.To(func(in *Data) *Data {
+		b := in.Get().(*bytes.Buffer)
 		data, err := ioutil.ReadAll(b)
-		var buffer bytes.Buffer
 
 		if err != nil {
 			fmt.Println("错误")
-
-			return &buffer, nil
+			in.SetErr(Error)
+			//return &buffer
 		} else {
 			var buffer bytes.Buffer
-
 			d := string(data) + strconv.Itoa(i) + "node1"
 			buffer.Write([]byte(d))
 			i++
+			in.Set(buffer)
 
-			return &buffer, nil
 		}
+		return in
 
 	})
-	flow2.To(func(in Data) (Data, error) {
-		b := in.(*bytes.Buffer)
+	flow2.To(func(in *Data) *Data {
+		b := in.Get().(bytes.Buffer)
 
 		time.Sleep(2 * time.Millisecond)
-		data, err := ioutil.ReadAll(b)
+		data, err := ioutil.ReadAll(&b)
 		var buffer bytes.Buffer
 		if err != nil {
 			fmt.Println("错误")
-			return &buffer, nil
 		} else {
 
 			d := string(data) + "node2\n"
 			buffer.Write([]byte(d))
-
+			in.Set(buffer)
 		}
-
-		return &buffer, nil
+		return in
 	})
 
 	flow.Run(true)
@@ -83,10 +80,10 @@ func TestFlowBuffer(t *testing.T) {
 	}
 	var j int64 = 0
 	for i := 0; i < 10000; i++ {
-		flow.Feed(&buffer, func(data Data) {
-			b := data.(*bytes.Buffer)
+		flow.Feed(&buffer, func(data *Data) {
+			b := data.Get().(bytes.Buffer)
 
-			dataBytes, err := ioutil.ReadAll(b)
+			dataBytes, err := ioutil.ReadAll(&b)
 			if err == nil {
 				f.Write(dataBytes)
 				fmt.Println(string(dataBytes))
@@ -100,19 +97,21 @@ func TestFlowBuffer(t *testing.T) {
 func TestFlowNumber(t *testing.T) {
 
 	flow := NewFlow(20)
-	flow1 := flow.To(func(in Data) (Data, error) {
-		b := in.(int)
-		return (rand.Intn(1000)) + b, nil
+	flow1 := flow.To(func(in *Data) *Data {
+		b := in.Get().(int)
+		in.Set((rand.Intn(1000)) + b)
+		return in
 	})
-	flow1.To(func(in Data) (Data, error) {
-		b := in.(int)
-		return (rand.Intn(1000)) + b, nil
+	flow1.To(func(in *Data) *Data {
+		b := in.Get().(int)
+		in.Set((rand.Intn(1000)) + b)
+		return in
 	})
 	flow.Run(true)
 
 	for i := 0; i < 1000; i++ {
 		func(n int) {
-			flow.Feed(n, func(data Data) {
+			flow.Feed(n, func(data *Data) {
 				fmt.Println(data)
 			})
 		}(rand.Intn(100))

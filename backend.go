@@ -18,13 +18,51 @@
 
 package flow
 
+import (
+	"fmt"
+	uuid "github.com/satori/go.uuid"
+	"strings"
+)
+
 // Node 实现该接口的是计算流
 type Node interface {
-	Next() Node                        // 子计算流
-	Run(in Data) (out Data, err error) //
+	Next() Node               // 子计算流
+	Run(in *Data) (out *Data) //
 	To(funcNode Func) Node
 	ToNode(node Node) Node
 }
 
 // Data 数据流
-type Data interface{}
+type Data struct {
+	flowId string
+	data   interface{}
+	err    error
+}
+
+func (d *Data) String() string {
+	if d.err != nil {
+		return fmt.Sprintf("{ flowId:%s,data:%v, err:%v}", d.flowId, d.data, d.err)
+	} else {
+		return fmt.Sprintf("{ flowId:%s,data:%v}", d.flowId, d.data)
+	}
+}
+
+func NewData(data interface{}) *Data {
+	flowId := strings.ReplaceAll(uuid.Must(uuid.NewV4(), nil).String(), "-", "")
+	return &Data{
+		data:   data,
+		flowId: flowId,
+	}
+}
+func (d *Data) Get() interface{} {
+	return d.data
+}
+func (d *Data) Set(data interface{}) {
+	d.data = data
+}
+func (d *Data) Err() error {
+	return d.err
+}
+func (d *Data) SetErr(err error) {
+	d.err = err
+}

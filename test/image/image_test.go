@@ -35,29 +35,28 @@ func TestImage(t *testing.T) {
 	pathFlow := newFlow.To(ffile.GetAllFiles(".jpg"))
 	openFlow := pathFlow.To(fimage.OpenWithPath())
 	h1 := openFlow.To(fimage.CropAnchor(300, 300, imaging.Center))
-	h2 := h1.To(func(in flow.Data) (flow.Data, error) {
-		return in, nil
+	h2 := h1.To(func(in *flow.Data) *flow.Data {
+		return in
 	})
-	h2.To(func(in flow.Data) (flow.Data, error) {
-		data, err := fimage.Grayscale()(in)
-		if err == nil {
+	h2.To(func(in *flow.Data) *flow.Data {
+		data := fimage.Grayscale()(in)
+		if data.Err() == nil {
 			return fimage.Invert()(data)
 		}
-		fmt.Println(err)
-		return nil, err
+		fmt.Println("h2", data.Err())
+		return data
 	})
 
 	newFlow.Run(false)
-	paths := []string{"data/", "d"}
+	paths := []string{"data/", "d", "11/", "../"}
 
 	rand.Seed(2020)
 	for _, path := range paths {
-		newFlow.Feed(path, func(result flow.Data) {
 
-			if re, ok := result.(error); ok {
-				fmt.Println(path, re)
-			}
-			if ims, ok := result.([]image.Image); ok {
+		newFlow.Feed(path, func(result *flow.Data) {
+			fmt.Println(result)
+
+			if ims, ok := result.Get().([]image.Image); ok {
 				for _, im := range ims {
 					_ = imaging.Save(im, strconv.Itoa(rand.Int())+".jpg")
 				}

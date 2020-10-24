@@ -20,6 +20,7 @@ package fimage
 
 import (
 	"github.com/disintegration/imaging"
+	"github.com/yunqi/flow"
 	"image"
 	"testing"
 )
@@ -220,8 +221,9 @@ func TestResize(t *testing.T) {
 			//tc.src,
 
 			got := Resize(tc.w, tc.h, tc.f)
-			ims, _ := got(tc.src)
-			imss := ims.([]image.Image)
+			data := flow.NewData(tc.src)
+			ims := got(data)
+			imss := ims.Get().([]image.Image)
 			for _, im := range imss {
 				if !compareNRGBA(im.(*image.NRGBA), tc.want, 0) {
 					t.Fatalf("got result %#v want %#v", got, tc.want)
@@ -253,8 +255,9 @@ func TestResampleFilters(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			src := image.NewNRGBA(image.Rect(-1, -1, 2, 3))
 			got := Resize(5, 6, filter)
-			ims, _ := got(src)
-			newIms := ims.([]image.Image)
+
+			ims := got(flow.NewData(src))
+			newIms := ims.Get().([]image.Image)
 
 			want := image.NewNRGBA(image.Rect(0, 0, 5, 6))
 			if !compareNRGBA(newIms[0].(*image.NRGBA), want, 0) {

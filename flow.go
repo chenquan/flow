@@ -19,38 +19,35 @@
 package flow
 
 import (
-	"os"
 	"sync"
 )
 
-var _ Data = (*os.File)(nil)
-
 // ChanData 数据流通道
-type ChanData chan Data
+type ChanData chan *Data
 
 // ResultFunc 流结果处理函数
-type ResultFunc func(result Data)
+type ResultFunc func(result *Data)
 
 // Flow 流
 type Flow struct {
 	root Node
-	in   chan Data
-	out  chan Data
+	in   chan *Data
+	out  chan *Data
 	buff int
 	wg   sync.WaitGroup
 }
 
 // NewFlow 新建一条流处理
 func NewFlow(buff int) *Flow {
-	f := func(in Data) (Data, error) {
-		return in, nil
+	f := func(in *Data) *Data {
+		return in
 	}
 	return &Flow{
 		root: &FuncNode{
 			funcNode: f,
 		},
-		in:   make(chan Data, buff),
-		out:  make(chan Data, buff),
+		in:   make(chan *Data, buff),
+		out:  make(chan *Data, buff),
 		buff: buff}
 }
 
@@ -84,15 +81,15 @@ func (f *Flow) Run(coroutine bool) {
 		out := nodeChans[i+1]
 		go func(node Node) {
 			for data := range in {
-				f := func(data Data) {
+				f := func(data *Data) {
 					// 确保每个协程执行完毕
 					f.wg.Add(1)
-					resultData, err := node.Run(data)
-					if err == nil {
+					resultData := node.Run(data)
+					if resultData.Err() == nil {
 						out <- resultData
 					} else {
 						// 将错误信息发送给输出通道
-						f.out <- err
+						f.out <- resultData
 					}
 					f.wg.Done()
 				}
@@ -110,10 +107,11 @@ func (f *Flow) Run(coroutine bool) {
 }
 
 // Feed 喂入流处理数据
-func (f *Flow) Feed(inData Data, resultFunc ResultFunc) {
+func (f *Flow) Feed(inData interface{}, resultFunc ResultFunc) {
 	f.wg.Add(1)
-	f.in <- inData
-	go func(resultFunc func(inData Data)) {
+
+	f.in <- NewData(inData)
+	go func(resultFunc func(inData *Data)) {
 		resultFunc(<-f.out)
 		f.wg.Done()
 	}(resultFunc)

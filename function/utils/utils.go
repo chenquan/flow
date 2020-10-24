@@ -23,21 +23,24 @@ import (
 	"os"
 )
 
-func ToStrings(in flow.Data) (strs []string) {
-	switch in.(type) {
+func ToStrings(in *flow.Data) (strs []string) {
+	data := in.Get()
+	switch data.(type) {
 	case string:
-		strs = append(strs, in.(string))
+		strs = append(strs, data.(string))
 	case []string:
-		strs = append(strs, in.([]string)...)
+		strs = append(strs, data.([]string)...)
 	}
 	return
 }
-func ToFiles(in flow.Data) (files []*os.File) {
-	switch in.(type) {
+func ToFiles(in *flow.Data) (files []*os.File) {
+	data := in.Get()
+
+	switch data.(type) {
 	case *os.File:
-		files = append(files, in.(*os.File))
+		files = append(files, data.(*os.File))
 	case []*os.File:
-		files = append(files, in.([]*os.File)...)
+		files = append(files, data.([]*os.File)...)
 	}
 	return
 }
