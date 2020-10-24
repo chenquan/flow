@@ -32,17 +32,18 @@ import (
 
 func TestImage(t *testing.T) {
 	newFlow := flow.NewFlow(10)
-	pathFlow := newFlow.To(ffile.GetAllFiles(".jpg"))
-	openFlow := pathFlow.To(fimage.OpenWithPath())
-	h1 := openFlow.To(fimage.CropAnchor(300, 300, imaging.Center))
-	h2 := h1.To(func(ctx *flow.Context) {
-	})
-	h2.To(func(ctx *flow.Context) {
-		fimage.Grayscale()(ctx)
-		if ctx.Err() == nil {
-			fimage.Invert()(ctx)
-		}
-	})
+
+	newFlow.
+		To(ffile.GetAllFiles(".jpg")).
+		To(fimage.OpenWithPath()).
+		To(fimage.CropAnchor(300, 300, imaging.Center)).
+		To(func(ctx *flow.Context) {
+			fimage.Grayscale()(ctx)
+			if ctx.Err() == nil {
+				fimage.Invert()(ctx)
+			}
+		}).
+		To(fimage.Invert())
 
 	newFlow.Run(false)
 	paths := []string{"data/", "d", "11/"}
@@ -52,9 +53,9 @@ func TestImage(t *testing.T) {
 
 		newFlow.Feed(path, func(result *flow.Context) {
 			fmt.Println(result)
-
-			if ims, ok := result.Get().([]image.Image); ok {
+			if ims, ok := result.Data().([]image.Image); ok {
 				for _, im := range ims {
+
 					_ = imaging.Save(im, strconv.Itoa(rand.Int())+".jpg")
 				}
 			}

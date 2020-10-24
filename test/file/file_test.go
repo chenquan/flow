@@ -22,14 +22,15 @@ import (
 	"fmt"
 	"github.com/yunqi/flow"
 	"github.com/yunqi/flow/function/ffile"
+	"os"
 	"testing"
 )
 
 func TestImage(t *testing.T) {
 	newFlow := flow.NewFlow(10)
-	newFlow.To(ffile.GetAllFiles(".jpg"))
-	//openFlow := pathFlow.To(ffile.OpenFile(os.O_RDWR, 0664))
-	//openFlow.To(ffile.GetSize())
+	newFlow.To(ffile.GetAllFiles(".jpg")).
+		To(ffile.OpenFile(os.O_RDWR, 0664)).
+		To(ffile.GetSize())
 
 	newFlow.Run(false)
 	paths := []string{"data/", "d", "11/", "../"}

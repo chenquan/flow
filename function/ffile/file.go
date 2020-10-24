@@ -59,10 +59,10 @@ func getAllFiles(dirPath string, suffix string) (files []string, err error) {
 func GetAllFiles(suffix string) flow.Func {
 
 	return func(ctx *flow.Context) {
-		if dirPath, ok := ctx.Get().(string); ok {
+		if dirPath, ok := ctx.Data().(string); ok {
 			files, err := getAllFiles(dirPath, suffix)
 			if err == nil {
-				ctx.Set(files)
+				ctx.SetData(files)
 			} else {
 				ctx.SetErr(err)
 			}
@@ -84,7 +84,7 @@ func OpenFile(flag int, perm os.FileMode) flow.Func {
 			}
 		}
 		if len(files) != 0 {
-			ctx.Set(files)
+			ctx.SetData(files)
 		} else {
 			ctx.SetErr(flow.Error)
 		}
@@ -102,7 +102,7 @@ func MkDir(perm os.FileMode) flow.Func {
 			}
 		}
 		if len(dirs) != 0 {
-			in.Set(dirs)
+			in.SetData(dirs)
 		} else {
 			in.SetErr(flow.Error)
 		}
@@ -134,7 +134,7 @@ func GetSize() flow.Func {
 			}
 		}
 		if len(fileSizes) != 0 {
-			ctx.Set(fileSizes)
+			ctx.SetData(fileSizes)
 		} else {
 			ctx.SetErr(flow.Error)
 		}

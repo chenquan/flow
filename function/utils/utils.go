@@ -24,7 +24,7 @@ import (
 )
 
 func ToStrings(ctx *flow.Context) (strs []string) {
-	data := ctx.Get()
+	data := ctx.Data()
 	switch data.(type) {
 	case string:
 		strs = append(strs, data.(string))
@@ -34,7 +34,7 @@ func ToStrings(ctx *flow.Context) (strs []string) {
 	return
 }
 func ToFiles(ctx *flow.Context) (files []*os.File) {
-	data := ctx.Get()
+	data := ctx.Data()
 
 	switch data.(type) {
 	case *os.File:

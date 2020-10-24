@@ -38,7 +38,7 @@ func TestFlowBuffer(t *testing.T) {
 	flow := NewFlow(1)
 
 	flow2 := flow.To(func(in *Context) {
-		b := in.Get().(*bytes.Buffer)
+		b := in.Data().(*bytes.Buffer)
 		data, err := ioutil.ReadAll(b)
 
 		if err != nil {
@@ -50,13 +50,13 @@ func TestFlowBuffer(t *testing.T) {
 			d := string(data) + strconv.Itoa(i) + "node1"
 			buffer.Write([]byte(d))
 			i++
-			in.Set(buffer)
+			in.SetData(buffer)
 
 		}
 
 	})
 	flow2.To(func(in *Context) {
-		b := in.Get().(bytes.Buffer)
+		b := in.Data().(bytes.Buffer)
 
 		time.Sleep(2 * time.Millisecond)
 		data, err := ioutil.ReadAll(&b)
@@ -67,7 +67,7 @@ func TestFlowBuffer(t *testing.T) {
 
 			d := string(data) + "node2\n"
 			buffer.Write([]byte(d))
-			in.Set(buffer)
+			in.SetData(buffer)
 		}
 	})
 
@@ -79,7 +79,7 @@ func TestFlowBuffer(t *testing.T) {
 	var j int64 = 0
 	for i := 0; i < 10000; i++ {
 		flow.Feed(&buffer, func(data *Context) {
-			b := data.Get().(bytes.Buffer)
+			b := data.Data().(bytes.Buffer)
 
 			dataBytes, err := ioutil.ReadAll(&b)
 			if err == nil {
@@ -96,12 +96,12 @@ func TestFlowNumber(t *testing.T) {
 
 	flow := NewFlow(20)
 	flow1 := flow.To(func(in *Context) {
-		b := in.Get().(int)
-		in.Set((rand.Intn(1000)) + b)
+		b := in.Data().(int)
+		in.SetData((rand.Intn(1000)) + b)
 	})
 	flow1.To(func(in *Context) {
-		b := in.Get().(int)
-		in.Set((rand.Intn(1000)) + b)
+		b := in.Data().(int)
+		in.SetData((rand.Intn(1000)) + b)
 	})
 	flow.Run(true)
 

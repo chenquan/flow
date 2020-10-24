@@ -22,6 +22,7 @@ import (
 	"fmt"
 	uuid "github.com/satori/go.uuid"
 	"strings"
+	"sync"
 )
 
 // Node 实现该接口的是计算流
@@ -34,10 +35,13 @@ type Node interface {
 
 // Context 流处理上下文
 type Context struct {
-	flowId string
-	data   interface{}
-	step   int32
-	err    error
+	flowId string                 // 流ID
+	data   interface{}            // 时间
+	step   int32                  // 当前执行步骤
+	err    error                  // 错误信息
+	cache  map[string]interface{} // 缓存
+	mu     sync.RWMutex           // 保护 cache
+	once   sync.Once              // err 只能被更改一次
 }
 
 func (d *Context) String() string {
@@ -54,20 +58,60 @@ func NewContext(data interface{}) *Context {
 		data:   data,
 		flowId: flowId,
 		step:   -1,
+		cache:  make(map[string]interface{}),
 	}
 }
-func (d *Context) Get() interface{} {
+
+// Data 返回数据
+// 并发不安全
+func (d *Context) Data() interface{} {
 	return d.data
 }
-func (d *Context) Set(data interface{}) {
+
+// SetData 修改数据
+// 并发不安全
+func (d *Context) SetData(data interface{}) {
 	d.data = data
 }
+
+//func (d *Context) Data() interface{} {
+//	return d.data
+//}
+//
+//func (d *Context) SetData(data interface{}) {
+//	d.data = data
+//}
+// Err 返回错误信息
 func (d *Context) Err() error {
 	return d.err
 }
+
+// SetErr 设置错误信息
+// 只能被设置一次非nil错误信息
 func (d *Context) SetErr(err error) {
-	d.err = err
+	if err != nil {
+		d.once.Do(func() {
+			d.err = err
+		})
+	}
+
 }
+
+// FlowId 返回流处理ID
 func (d *Context) FlowId() string {
 	return d.flowId
+}
+
+// SetCache 设置缓存
+func (d *Context) SetCache(key string, value interface{}) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.cache[key] = value
+}
+
+// GetCache 返回对应 key 的缓存值
+func (d *Context) GetCache(key string) (value interface{}) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	return d.cache[key]
 }

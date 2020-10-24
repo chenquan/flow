@@ -223,7 +223,7 @@ func TestResize(t *testing.T) {
 			got := Resize(tc.w, tc.h, tc.f)
 			ctx := flow.NewContext(tc.src)
 			got(ctx)
-			imss := ctx.Get().([]image.Image)
+			imss := ctx.Data().([]image.Image)
 			for _, im := range imss {
 				if !compareNRGBA(im.(*image.NRGBA), tc.want, 0) {
 					t.Fatalf("got result %#v want %#v", got, tc.want)
@@ -257,7 +257,7 @@ func TestResampleFilters(t *testing.T) {
 			got := Resize(5, 6, filter)
 			ctx := flow.NewContext(src)
 			got(ctx)
-			newIms := ctx.Get().([]image.Image)
+			newIms := ctx.Data().([]image.Image)
 
 			want := image.NewNRGBA(image.Rect(0, 0, 5, 6))
 			if !compareNRGBA(newIms[0].(*image.NRGBA), want, 0) {

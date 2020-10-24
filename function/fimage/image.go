@@ -62,7 +62,7 @@ func OpenWithPath() flow.Func {
 			}
 		}
 		if len(ims) != 0 {
-			ctx.Set(ims)
+			ctx.SetData(ims)
 		} else {
 			ctx.SetErr(OpenError)
 		}
@@ -78,7 +78,7 @@ func CropAnchor(width, height int, anchor imaging.Anchor) flow.Func {
 			ims = append(ims, newIm)
 		}
 		if len(ims) != 0 {
-			ctx.Set(ims)
+			ctx.SetData(ims)
 		} else {
 			ctx.SetErr(CropAnchorError)
 		}
@@ -87,7 +87,7 @@ func CropAnchor(width, height int, anchor imaging.Anchor) flow.Func {
 
 // toImages 转为 []image.Image
 func toImages(ctx *flow.Context) (images []image.Image) {
-	data := ctx.Get()
+	data := ctx.Data()
 	switch data.(type) {
 	case image.Image:
 		images = append(images, data.(image.Image))
@@ -113,7 +113,7 @@ func Resize(width, height int, filter imaging.ResampleFilter) flow.Func {
 			return imaging.Resize(im, width, height, filter)
 		})
 		if len(ims) != 0 {
-			ctx.Set(ims)
+			ctx.SetData(ims)
 		} else {
 			ctx.SetErr(ResizeError)
 		}
@@ -128,7 +128,7 @@ func Fit(width, height int, filter imaging.ResampleFilter) flow.Func {
 			return imaging.Fit(im, width, height, filter)
 		})
 		if len(ims) != 0 {
-			ctx.Set(ims)
+			ctx.SetData(ims)
 		} else {
 			ctx.SetErr(FitError)
 		}
@@ -142,7 +142,7 @@ func Fill(width, height int, anchor imaging.Anchor, filter imaging.ResampleFilte
 			return imaging.Fill(im, width, height, anchor, filter)
 		})
 		if len(ims) != 0 {
-			ctx.Set(ims)
+			ctx.SetData(ims)
 		} else {
 			ctx.SetErr(FillError)
 		}
@@ -156,7 +156,7 @@ func Sharpen(sigma float64) flow.Func {
 			return imaging.Sharpen(im, sigma)
 		})
 		if len(ims) != 0 {
-			ctx.Set(ims)
+			ctx.SetData(ims)
 		} else {
 			ctx.SetErr(SharpenError)
 		}
@@ -171,7 +171,7 @@ func AdjustGamma(gamma float64) flow.Func {
 		})
 
 		if len(ims) != 0 {
-			ctx.Set(ims)
+			ctx.SetData(ims)
 		} else {
 			ctx.SetErr(AdjustGammaError)
 		}
@@ -186,7 +186,7 @@ func AdjustContrast(percentage float64) flow.Func {
 		})
 
 		if len(ims) != 0 {
-			ctx.Set(ims)
+			ctx.SetData(ims)
 		} else {
 			ctx.SetErr(AdjustContrastError)
 		}
@@ -202,7 +202,7 @@ func AdjustBrightness(percentage float64) flow.Func {
 		})
 
 		if len(ims) != 0 {
-			ctx.Set(ims)
+			ctx.SetData(ims)
 		} else {
 			ctx.SetErr(AdjustBrightnessError)
 		}
@@ -217,7 +217,7 @@ func AdjustSaturation(percentage float64) flow.Func {
 			return imaging.AdjustSaturation(im, percentage)
 		})
 		if len(ims) != 0 {
-			in.Set(ims)
+			in.SetData(ims)
 		} else {
 			in.SetErr(AdjustSaturationError)
 		}
@@ -231,7 +231,7 @@ func Blur(sigma float64) flow.Func {
 			return imaging.Blur(im, sigma)
 		})
 		if len(ims) != 0 {
-			ctx.Set(ims)
+			ctx.SetData(ims)
 		} else {
 			ctx.SetErr(BlurError)
 		}
@@ -245,7 +245,7 @@ func Invert() flow.Func {
 			return imaging.Invert(im)
 		})
 		if len(ims) != 0 {
-			ctx.Set(ims)
+			ctx.SetData(ims)
 		} else {
 			ctx.SetErr(InvertError)
 		}
@@ -260,7 +260,7 @@ func Grayscale() flow.Func {
 			return imaging.Grayscale(im)
 		})
 		if len(ims) != 0 {
-			ctx.Set(ims)
+			ctx.SetData(ims)
 		} else {
 			ctx.SetErr(GrayscaleError)
 		}
@@ -280,7 +280,7 @@ func Convolve3x3(kernel [9]float64, options *imaging.ConvolveOptions) flow.Func 
 			)
 		})
 		if len(ims) != 0 {
-			ctx.Set(ims)
+			ctx.SetData(ims)
 		} else {
 			ctx.SetErr(Convolve3x3Error)
 		}
@@ -294,7 +294,7 @@ func Paste(img image.Image, pos image.Point) flow.Func {
 			return imaging.Paste(im, img, pos)
 		})
 		if len(ims) != 0 {
-			ctx.Set(ims)
+			ctx.SetData(ims)
 		} else {
 			ctx.SetErr(PasteError)
 		}
