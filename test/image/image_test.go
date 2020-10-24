@@ -19,10 +19,11 @@
 package image
 
 import (
+	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/yunqi/flow"
-	"github.com/yunqi/flow/ffile"
-	"github.com/yunqi/flow/fimage"
+	"github.com/yunqi/flow/function/ffile"
+	"github.com/yunqi/flow/function/fimage"
 	"image"
 	"math/rand"
 	"strconv"
@@ -34,24 +35,28 @@ func TestImage(t *testing.T) {
 	pathFlow := newFlow.To(ffile.GetAllFiles(".jpg"))
 	openFlow := pathFlow.To(fimage.OpenWithPath())
 	h1 := openFlow.To(fimage.CropAnchor(300, 300, imaging.Center))
-	h2 := h1.To(func(in flow.Data) (flow.Data, bool) {
-		return in, true
+	h2 := h1.To(func(in flow.Data) (flow.Data, error) {
+		return in, nil
 	})
-	h2.To(func(in flow.Data) (flow.Data, bool) {
-		data, ok := fimage.Grayscale()(in)
-		if ok {
+	h2.To(func(in flow.Data) (flow.Data, error) {
+		data, err := fimage.Grayscale()(in)
+		if err == nil {
 			return fimage.Invert()(data)
 		}
-		return nil, false
+		fmt.Println(err)
+		return nil, err
 	})
 
 	newFlow.Run(false)
-	paths := []string{"data/"}
+	paths := []string{"data/", "d"}
 
 	rand.Seed(2020)
 	for _, path := range paths {
 		newFlow.Feed(path, func(result flow.Data) {
 
+			if re, ok := result.(error); ok {
+				fmt.Println(path, re)
+			}
 			if ims, ok := result.([]image.Image); ok {
 				for _, im := range ims {
 					_ = imaging.Save(im, strconv.Itoa(rand.Int())+".jpg")

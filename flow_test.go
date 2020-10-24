@@ -37,7 +37,7 @@ func TestFlowBuffer(t *testing.T) {
 	i := 0
 	flow := NewFlow(1)
 
-	flow2 := flow.To(func(in Data) (Data, bool) {
+	flow2 := flow.To(func(in Data) (Data, error) {
 		b := in.(*bytes.Buffer)
 		data, err := ioutil.ReadAll(b)
 		var buffer bytes.Buffer
@@ -45,7 +45,7 @@ func TestFlowBuffer(t *testing.T) {
 		if err != nil {
 			fmt.Println("错误")
 
-			return &buffer, true
+			return &buffer, nil
 		} else {
 			var buffer bytes.Buffer
 
@@ -53,11 +53,11 @@ func TestFlowBuffer(t *testing.T) {
 			buffer.Write([]byte(d))
 			i++
 
-			return &buffer, true
+			return &buffer, nil
 		}
 
 	})
-	flow2.To(func(in Data) (Data, bool) {
+	flow2.To(func(in Data) (Data, error) {
 		b := in.(*bytes.Buffer)
 
 		time.Sleep(2 * time.Millisecond)
@@ -65,7 +65,7 @@ func TestFlowBuffer(t *testing.T) {
 		var buffer bytes.Buffer
 		if err != nil {
 			fmt.Println("错误")
-			return &buffer, true
+			return &buffer, nil
 		} else {
 
 			d := string(data) + "node2\n"
@@ -73,7 +73,7 @@ func TestFlowBuffer(t *testing.T) {
 
 		}
 
-		return &buffer, true
+		return &buffer, nil
 	})
 
 	flow.Run(true)
@@ -100,20 +100,23 @@ func TestFlowBuffer(t *testing.T) {
 func TestFlowNumber(t *testing.T) {
 
 	flow := NewFlow(20)
-	flow1 := flow.To(func(in Data) (Data, bool) {
+	flow1 := flow.To(func(in Data) (Data, error) {
 		b := in.(int)
-		return (rand.Intn(1000)) + b, true
+		return (rand.Intn(1000)) + b, nil
 	})
-	flow1.To(func(in Data) (Data, bool) {
+	flow1.To(func(in Data) (Data, error) {
 		b := in.(int)
-		return (rand.Intn(1000)) + b, true
+		return (rand.Intn(1000)) + b, nil
 	})
 	flow.Run(true)
 
 	for i := 0; i < 1000; i++ {
-		flow.Feed(rand.Intn(100), func(data Data) {
-			fmt.Println(data)
-		})
+		func(n int) {
+			flow.Feed(n, func(data Data) {
+				fmt.Println(data)
+			})
+		}(rand.Intn(100))
+
 	}
 	flow.Wait()
 }

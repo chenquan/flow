@@ -19,7 +19,7 @@
 package flow
 
 // Func 节点处理函数
-type Func func(in Data) (Data, bool)
+type Func func(in Data) (Data, error)
 
 var _ Node = (*FuncNode)(nil)
 
@@ -54,7 +54,7 @@ func (f *FuncNode) Next() Node {
 }
 
 // 执行流节点函数
-func (f *FuncNode) Run(in Data) (out Data, ok bool) {
-	out, ok = f.funcNode(in)
+func (f *FuncNode) Run(in Data) (out Data, err error) {
+	out, err = f.funcNode(in)
 	return
 }

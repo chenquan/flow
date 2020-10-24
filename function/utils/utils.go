@@ -16,15 +16,28 @@
  *
  */
 
-package flow
+package utils
 
-// Node 实现该接口的是计算流
-type Node interface {
-	Next() Node                        // 子计算流
-	Run(in Data) (out Data, err error) //
-	To(funcNode Func) Node
-	ToNode(node Node) Node
+import (
+	"github.com/yunqi/flow"
+	"os"
+)
+
+func ToStrings(in flow.Data) (strs []string) {
+	switch in.(type) {
+	case string:
+		strs = append(strs, in.(string))
+	case []string:
+		strs = append(strs, in.([]string)...)
+	}
+	return
 }
-
-// Data 数据流
-type Data interface{}
+func ToFiles(in flow.Data) (files []*os.File) {
+	switch in.(type) {
+	case *os.File:
+		files = append(files, in.(*os.File))
+	case []*os.File:
+		files = append(files, in.([]*os.File)...)
+	}
+	return
+}

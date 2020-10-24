@@ -20,6 +20,7 @@ package ffile
 
 import (
 	"github.com/yunqi/flow"
+	"github.com/yunqi/flow/function/utils"
 	"io/ioutil"
 	"os"
 	"path"
@@ -56,61 +57,46 @@ func getAllFiles(dirPath string, suffix string) (files []string, err error) {
 // GetAllFiles 获取指定后缀名的文件路径
 func GetAllFiles(suffix string) flow.Func {
 
-	return func(in flow.Data) (flow.Data, bool) {
+	return func(in flow.Data) (flow.Data, error) {
 		if dirPath, ok := in.(string); ok {
 			files, err := getAllFiles(dirPath, suffix)
-			if err == nil {
-				return files, true
-			}
+			return files, err
 		}
-		return nil, false
+		return nil, flow.Error
 	}
-}
-
-func toStrings(in flow.Data) (strs []string) {
-	switch in.(type) {
-	case string:
-		strs = append(strs, in.(string))
-	case []string:
-		strs = append(strs, in.([]string)...)
-	}
-	return
-}
-func toFiles(in flow.Data) (files []*os.File) {
-	switch in.(type) {
-	case *os.File:
-		files = append(files, in.(*os.File))
-	case []*os.File:
-		files = append(files, in.([]*os.File)...)
-	}
-	return
 }
 
 // OpenFile 打开文件
 func OpenFile(flag int, perm os.FileMode) flow.Func {
-	return func(in flow.Data) (flow.Data, bool) {
+	return func(in flow.Data) (flow.Data, error) {
 		var files []*os.File
-		for _, s := range toStrings(in) {
+		for _, s := range utils.ToStrings(in) {
 			f, err := os.OpenFile(s, flag, perm)
 			if err == nil {
 				files = append(files, f)
 			}
 		}
-		return files, len(files) != 0
+		if len(files) != 0 {
+			return files, nil
+		}
+		return files, flow.Error
 	}
 }
 
 //
 func MkDir(perm os.FileMode) flow.Func {
-	return func(in flow.Data) (flow.Data, bool) {
+	return func(in flow.Data) (flow.Data, error) {
 		var dirs []string
-		for _, s := range toStrings(in) {
+		for _, s := range utils.ToStrings(in) {
 			err := os.MkdirAll(s, perm)
 			if err == nil {
 				dirs = append(dirs, s)
 			}
 		}
-		return dirs, len(dirs) != 0
+		if len(dirs) != 0 {
+			return dirs, nil
+		}
+		return nil, flow.Error
 	}
 }
 
@@ -121,10 +107,10 @@ type FileSize struct {
 
 //
 func GetSize() flow.Func {
-	return func(in flow.Data) (flow.Data, bool) {
+	return func(in flow.Data) (flow.Data, error) {
 
 		fileSizes := make([]*FileSize, 0)
-		for _, file := range toFiles(in) {
+		for _, file := range utils.ToFiles(in) {
 			file.Name()
 			size, err := ioutil.ReadAll(file)
 			if err == nil {
@@ -134,6 +120,9 @@ func GetSize() flow.Func {
 				})
 			}
 		}
-		return fileSizes, len(fileSizes) != 0
+		if len(fileSizes) != 0 {
+			return fileSizes, nil
+		}
+		return nil, flow.Error
 	}
 }

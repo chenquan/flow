@@ -42,8 +42,8 @@ type Flow struct {
 
 // NewFlow 新建一条流处理
 func NewFlow(buff int) *Flow {
-	f := func(in Data) (Data, bool) {
-		return in, true
+	f := func(in Data) (Data, error) {
+		return in, nil
 	}
 	return &Flow{
 		root: &FuncNode{
@@ -87,19 +87,19 @@ func (f *Flow) Run(coroutine bool) {
 				f := func(data Data) {
 					// 确保每个协程执行完毕
 					f.wg.Add(1)
-					resultData, ok := node.Run(data)
-					if ok {
+					resultData, err := node.Run(data)
+					if err == nil {
 						out <- resultData
 					} else {
-						// 当一个流被阻挡进行前进时,因避免在流的出口处 ResultFunc函数的等待
-						f.wg.Done()
+						// 将错误信息发送给输出通道
+						f.out <- err
 					}
 					f.wg.Done()
 				}
 				if coroutine {
 					go f(data)
 				} else {
-					go f(data)
+					f(data)
 
 				}
 			}
