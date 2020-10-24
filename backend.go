@@ -66,3 +66,6 @@ func (d *Data) Err() error {
 func (d *Data) SetErr(err error) {
 	d.err = err
 }
+func (d *Data) FlowId() string {
+	return d.flowId
+}

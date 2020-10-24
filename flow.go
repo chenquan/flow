@@ -107,15 +107,26 @@ func (f *Flow) Run(coroutine bool) {
 }
 
 // Feed 喂入流处理数据
-func (f *Flow) Feed(inData interface{}, resultFunc ResultFunc) {
+func (f *Flow) Feed(inData interface{}, resultFunc ResultFunc) string {
 	f.wg.Add(1)
-
-	f.in <- NewData(inData)
+	data := NewData(inData)
+	f.in <- data
 	go func(resultFunc func(inData *Data)) {
 		resultFunc(<-f.out)
 		f.wg.Done()
 	}(resultFunc)
+	return data.FlowId()
+}
 
+// Feed 喂入流处理数据
+func (f *Flow) FeedData(inData *Data, resultFunc ResultFunc) string {
+	f.wg.Add(1)
+	f.in <- inData
+	go func(resultFunc func(inData *Data)) {
+		resultFunc(<-f.out)
+		f.wg.Done()
+	}(resultFunc)
+	return inData.FlowId()
 }
 
 // Wait 等待全部流结束
