@@ -23,11 +23,11 @@ import (
 	"sync/atomic"
 )
 
-// ChanData 数据流通道
-type ChanData chan *Context
+// ChanContext 数据流通道
+type ChanContext chan *Context
 
 // ResultFunc 流结果处理函数
-type ResultFunc func(result *Context)
+//type ResultFunc func(ctx *Context)
 
 // Flow 流
 type Flow struct {
@@ -68,10 +68,10 @@ func (f *Flow) To(funcNode Func) Node {
 func (f *Flow) Run(coroutine bool) {
 	node := f.root
 
-	nodeChans := make([]ChanData, 0)
+	nodeChans := make([]ChanContext, 0)
 	nodeChans = append(nodeChans, f.in)
 	for node != nil && node.Next() != nil {
-		nodeChans = append(nodeChans, make(ChanData, f.buff))
+		nodeChans = append(nodeChans, make(ChanContext, f.buff))
 		node = node.Next()
 	}
 	nodeChans = append(nodeChans, f.out)
@@ -109,19 +109,19 @@ func (f *Flow) Run(coroutine bool) {
 }
 
 // Feed 喂入流处理数据
-func (f *Flow) Feed(inData interface{}, resultFunc ResultFunc) string {
+func (f *Flow) Feed(data interface{}, resultFunc Func) string {
 	f.wg.Add(1)
-	data := NewContext(inData)
-	f.in <- data
+	ctx := NewContext(data)
+	f.in <- ctx
 	go func(resultFunc func(inData *Context)) {
 		resultFunc(<-f.out)
 		f.wg.Done()
 	}(resultFunc)
-	return data.FlowId()
+	return ctx.FlowId()
 }
 
 // Feed 喂入流处理数据
-func (f *Flow) FeedData(ctx *Context, resultFunc ResultFunc) string {
+func (f *Flow) FeedData(ctx *Context, resultFunc Func) string {
 	f.wg.Add(1)
 	f.in <- ctx
 	go func(resultFunc func(ctx *Context)) {

@@ -58,35 +58,35 @@ func getAllFiles(dirPath string, suffix string) (files []string, err error) {
 // GetAllFiles 获取指定后缀名的文件路径
 func GetAllFiles(suffix string) flow.Func {
 
-	return func(in *flow.Context) {
-		if dirPath, ok := in.Get().(string); ok {
+	return func(ctx *flow.Context) {
+		if dirPath, ok := ctx.Get().(string); ok {
 			files, err := getAllFiles(dirPath, suffix)
 			if err == nil {
-				in.Set(files)
+				ctx.Set(files)
 			} else {
-				in.SetErr(err)
+				ctx.SetErr(err)
 			}
 
 		} else {
-			in.SetErr(flow.Error)
+			ctx.SetErr(flow.Error)
 		}
 	}
 }
 
 // OpenFile 打开文件
 func OpenFile(flag int, perm os.FileMode) flow.Func {
-	return func(in *flow.Context) {
+	return func(ctx *flow.Context) {
 		var files []*os.File
-		for _, s := range utils.ToStrings(in) {
+		for _, s := range utils.ToStrings(ctx) {
 			f, err := os.OpenFile(s, flag, perm)
 			if err == nil {
 				files = append(files, f)
 			}
 		}
 		if len(files) != 0 {
-			in.Set(files)
+			ctx.Set(files)
 		} else {
-			in.SetErr(flow.Error)
+			ctx.SetErr(flow.Error)
 		}
 	}
 }
@@ -120,10 +120,10 @@ func (f *FileSize) String() string {
 
 //
 func GetSize() flow.Func {
-	return func(in *flow.Context) {
+	return func(ctx *flow.Context) {
 
 		fileSizes := make([]*FileSize, 0)
-		for _, file := range utils.ToFiles(in) {
+		for _, file := range utils.ToFiles(ctx) {
 			file.Name()
 			size, err := ioutil.ReadAll(file)
 			if err == nil {
@@ -134,9 +134,9 @@ func GetSize() flow.Func {
 			}
 		}
 		if len(fileSizes) != 0 {
-			in.Set(fileSizes)
+			ctx.Set(fileSizes)
 		} else {
-			in.SetErr(flow.Error)
+			ctx.SetErr(flow.Error)
 		}
 	}
 }
