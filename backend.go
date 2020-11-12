@@ -46,9 +46,9 @@ type Context struct {
 
 func (c *Context) String() string {
 	if c.err != nil {
-		return fmt.Sprintf("{ flowId:%s, step:%c, data:%v, err:%v}", c.flowId, c.step, c.data, c.err)
+		return fmt.Sprintf("{ flowId:%s, step:%d, data:%v, err:%v}", c.flowId, c.step, c.data, c.err)
 	} else {
-		return fmt.Sprintf("{ flowId:%s, step:%c, data:%v}", c.flowId, c.step, c.data)
+		return fmt.Sprintf("{ flowId:%s, step:%d, data:%v}", c.flowId, c.step, c.data)
 	}
 }
 
