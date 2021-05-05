@@ -56,7 +56,7 @@ func TestImage(t *testing.T) {
 			if ims, ok := result.Data().([]image.Image); ok {
 				for _, im := range ims {
 
-					_ = imaging.Save(im, strconv.Itoa(rand.Int())+".jpg")
+					_ = imaging.Save(im, "data/"+strconv.Itoa(rand.Int())+".jpg")
 				}
 			}
 		})

@@ -30,7 +30,7 @@ type FuncNode struct {
 
 }
 
-// FlowInWithFunc 数据流入函数流节点
+// To 数据流入函数流节点
 func (f *FuncNode) To(funcNode Func) Node {
 	node := NewFuncNode(funcNode)
 	f.nextFuncFlows = node
@@ -42,7 +42,7 @@ func NewFuncNode(funcNode Func) Node {
 	return &FuncNode{funcNode: funcNode}
 }
 
-//// FlowIn 数据流入流节点
+// ToNode 数据流入流节点
 func (f *FuncNode) ToNode(node Node) Node {
 	f.nextFuncFlows = node
 	return node
@@ -53,7 +53,7 @@ func (f *FuncNode) Next() Node {
 	return f.nextFuncFlows
 }
 
-// 执行流节点函数
+// Run 执行流节点函数
 func (f *FuncNode) Run(in *Context) {
 	f.funcNode(in)
 	return

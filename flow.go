@@ -19,6 +19,8 @@
 package flow
 
 import (
+	"fmt"
+	"github.com/panjf2000/ants/v2"
 	"sync"
 	"sync/atomic"
 )
@@ -36,6 +38,7 @@ type Flow struct {
 	out  chan *Context
 	buff int
 	wg   sync.WaitGroup
+	pool *ants.PoolWithFunc
 }
 
 // NewFlow 新建一条流处理
@@ -52,20 +55,45 @@ func NewFlow(buff int) *Flow {
 		buff: buff}
 }
 
-// FlowIn 数据流入流节点
+// ToNode 数据流入流节点
 func (f *Flow) ToNode(node Node) Node {
 	f.root.ToNode(node)
 	return node
 }
 
-// FlowInWithFunc 数据流入函数流节点
+// To 数据流入函数流节点
 func (f *Flow) To(funcNode Func) Node {
 	node := f.root.To(funcNode)
 	return node
 }
 
+type NodeData struct {
+	node Node
+	ctx  *Context
+	out  ChanContext
+}
+
 // Run 建立流处理通道
-func (f *Flow) Run(coroutine bool) {
+func (f *Flow) Run(pool bool) {
+	fn := func(ctx *Context, node Node, out ChanContext) {
+		// 确保每个协程执行完毕
+		f.wg.Add(1)
+		defer f.wg.Done()
+		node.Run(ctx)
+		if ctx.Err() == nil {
+			out <- ctx
+		} else {
+			// 将错误信息发送给输出通道
+			f.out <- ctx
+		}
+		atomic.AddInt32(&ctx.step, 1)
+	}
+	// 协程池
+	f.pool, _ = ants.NewPoolWithFunc(1000, func(c interface{}) {
+		nodeData := c.(*NodeData)
+		fn(nodeData.ctx, nodeData.node, nodeData.out)
+	})
+
 	node := f.root
 
 	nodeChans := make([]ChanContext, 0)
@@ -82,24 +110,17 @@ func (f *Flow) Run(coroutine bool) {
 		out := nodeChans[i+1]
 		go func(node Node) {
 			for ctx := range in {
-				f := func(ctx *Context) {
-					// 确保每个协程执行完毕
-					f.wg.Add(1)
-					node.Run(ctx)
-					if ctx.Err() == nil {
-						out <- ctx
-					} else {
-						// 将错误信息发送给输出通道
-						f.out <- ctx
+				if pool {
+					err := f.pool.Invoke(&NodeData{
+						node: node,
+						ctx:  ctx,
+						out:  out,
+					})
+					if err != nil {
+						fmt.Println(err)
 					}
-					atomic.AddInt32(&ctx.step, 1)
-					f.wg.Done()
-				}
-				if coroutine {
-					go f(ctx)
 				} else {
-					f(ctx)
-
+					fn(ctx, node, out)
 				}
 			}
 		}(node)
@@ -120,7 +141,7 @@ func (f *Flow) Feed(data interface{}, resultFunc Func) string {
 	return ctx.FlowId()
 }
 
-// Feed 喂入流处理数据
+// FeedData 喂入流处理数据
 func (f *Flow) FeedData(ctx *Context, resultFunc Func) string {
 	f.wg.Add(1)
 	f.in <- ctx
@@ -134,4 +155,5 @@ func (f *Flow) FeedData(ctx *Context, resultFunc Func) string {
 // Wait 等待全部流结束
 func (f *Flow) Wait() {
 	f.wg.Wait()
+	defer f.pool.Release()
 }

@@ -20,32 +20,32 @@ package flow
 
 import (
 	"fmt"
-	"math/rand"
+	"github.com/panjf2000/ants/v2"
+	"sync"
 	"testing"
+	"time"
 )
 
-func TestFlowNumber(t *testing.T) {
+func demoFunc() {
+	time.Sleep(10 * time.Millisecond)
+	fmt.Println("Hello World!")
+}
+func TestPool(t *testing.T) {
+	defer ants.Release()
 
-	flow := NewFlow(20)
-	flow1 := flow.To(func(in *Context) {
-		b := in.Data().(int)
-		in.SetData((rand.Intn(1000)) + b)
-	})
-	flow1.To(func(in *Context) {
-		b := in.Data().(int)
-		in.SetData((rand.Intn(1000)) + b)
-	})
-	flow.Run(true)
+	runTimes := 1000
 
-	for i := 0; i < 1000; i++ {
-		func(n int) {
-			feedId := flow.Feed(n, func(data *Context) {
-				fmt.Println(data)
-			})
-			fmt.Println(feedId)
-		}(rand.Intn(100))
-
+	// Use the common pool.
+	var wg sync.WaitGroup
+	syncCalculateSum := func() {
+		demoFunc()
+		wg.Done()
 	}
-
-	flow.Wait()
+	for i := 0; i < runTimes; i++ {
+		wg.Add(1)
+		_ = ants.Submit(syncCalculateSum)
+	}
+	wg.Wait()
+	fmt.Printf("running goroutines: %d\n", ants.Running())
+	fmt.Printf("finish all tasks.\n")
 }
