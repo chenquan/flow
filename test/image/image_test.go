@@ -45,21 +45,21 @@ func TestImage(t *testing.T) {
 		}).
 		To(fimage.Invert())
 
-	newFlow.Run(false)
+	newFlow.Run(func(result *flow.Context) {
+		fmt.Println(result)
+		if ims, ok := result.Data().([]image.Image); ok {
+			for _, im := range ims {
+
+				_ = imaging.Save(im, "data/"+strconv.Itoa(rand.Int())+".jpg")
+			}
+		}
+	})
 	paths := []string{"data/", "d", "11/"}
 
 	rand.Seed(2020)
 	for _, path := range paths {
 
-		newFlow.Feed(path, func(result *flow.Context) {
-			fmt.Println(result)
-			if ims, ok := result.Data().([]image.Image); ok {
-				for _, im := range ims {
-
-					_ = imaging.Save(im, "data/"+strconv.Itoa(rand.Int())+".jpg")
-				}
-			}
-		})
+		newFlow.Feed(path)
 	}
 
 	newFlow.Wait()

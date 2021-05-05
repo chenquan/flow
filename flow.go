@@ -33,12 +33,12 @@ type ChanContext chan *Context
 
 // Flow 流
 type Flow struct {
-	root Node
-	in   chan *Context
-	out  chan *Context
-	buff int
-	wg   sync.WaitGroup
-	pool *ants.PoolWithFunc
+	root  Node
+	in    chan *Context
+	out   chan *Context
+	buff  int
+	wg    sync.WaitGroup
+	pools []*ants.PoolWithFunc
 }
 
 // NewFlow 新建一条流处理
@@ -74,7 +74,11 @@ type NodeData struct {
 }
 
 // Run 建立流处理通道
-func (f *Flow) Run(pool bool) {
+func (f *Flow) Run(resultFunc Func, options ...Option) {
+
+	// option
+	op := loadOptions(options...)
+
 	fn := func(ctx *Context, node Node, out ChanContext) {
 		// 确保每个协程执行完毕
 		f.wg.Add(1)
@@ -88,11 +92,6 @@ func (f *Flow) Run(pool bool) {
 		}
 		atomic.AddInt32(&ctx.step, 1)
 	}
-	// 协程池
-	f.pool, _ = ants.NewPoolWithFunc(1000, func(c interface{}) {
-		nodeData := c.(*NodeData)
-		fn(nodeData.ctx, nodeData.node, nodeData.out)
-	})
 
 	node := f.root
 
@@ -108,10 +107,20 @@ func (f *Flow) Run(pool bool) {
 	for i := 0; node != nil; i++ {
 		in := nodeChans[i]
 		out := nodeChans[i+1]
-		go func(node Node) {
+		// Node goroutine pool
+		var nodePool *ants.PoolWithFunc
+		if !op.disablePool {
+			nodePool, _ = ants.NewPoolWithFunc(op.poolSize, func(c interface{}) {
+				nodeData := c.(*NodeData)
+				fn(nodeData.ctx, nodeData.node, nodeData.out)
+			})
+			f.pools = append(f.pools, nodePool)
+		}
+		// execute node
+		go func(node Node, nodePool *ants.PoolWithFunc, in, out ChanContext, i int) {
 			for ctx := range in {
-				if pool {
-					err := f.pool.Invoke(&NodeData{
+				if !op.disablePool {
+					err := nodePool.Invoke(&NodeData{
 						node: node,
 						ctx:  ctx,
 						out:  out,
@@ -123,37 +132,57 @@ func (f *Flow) Run(pool bool) {
 					fn(ctx, node, out)
 				}
 			}
-		}(node)
+		}(node, nodePool, in, out, i)
+
 		node = node.Next()
 	}
+	// process flow results
+	go func() {
+		// result goroutine pool
+		resultPool, _ := ants.NewPoolWithFunc(op.poolSize, func(c interface{}) {
+			ctx := c.(*Context)
+			resultFunc(ctx)
+			f.wg.Done()
+		})
+		f.pools = append(f.pools, resultPool)
+		for ctx := range f.out {
+			err := resultPool.Invoke(ctx)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+	}()
 
 }
 
 // Feed 喂入流处理数据
-func (f *Flow) Feed(data interface{}, resultFunc Func) string {
+func (f *Flow) Feed(data interface{}) string {
 	f.wg.Add(1)
 	ctx := NewContext(data)
 	f.in <- ctx
-	go func(resultFunc func(inData *Context)) {
-		resultFunc(<-f.out)
-		f.wg.Done()
-	}(resultFunc)
 	return ctx.FlowId()
 }
 
-// FeedData 喂入流处理数据
-func (f *Flow) FeedData(ctx *Context, resultFunc Func) string {
-	f.wg.Add(1)
-	f.in <- ctx
-	go func(resultFunc func(ctx *Context)) {
-		resultFunc(<-f.out)
-		f.wg.Done()
-	}(resultFunc)
-	return ctx.FlowId()
-}
+//// FeedData 喂入流处理数据
+//func (f *Flow) FeedData(ctx *Context, resultFunc Func) string {
+//	f.wg.Add(1)
+//	f.in <- ctx
+//	go func(resultFunc func(ctx *Context)) {
+//		resultFunc(<-f.out)
+//		f.wg.Done()
+//	}(resultFunc)
+//	return ctx.FlowId()
+//}
 
 // Wait 等待全部流结束
 func (f *Flow) Wait() {
 	f.wg.Wait()
-	defer f.pool.Release()
+	defer func() {
+		// 释放协程池
+		if f.pools != nil {
+			for _, pool := range f.pools {
+				pool.Release()
+			}
+		}
+	}()
 }

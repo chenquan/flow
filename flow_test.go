@@ -20,8 +20,8 @@ package flow
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
+	"time"
 )
 
 func TestFlowNumber(t *testing.T) {
@@ -29,23 +29,76 @@ func TestFlowNumber(t *testing.T) {
 	flow := NewFlow(20)
 	flow1 := flow.To(func(in *Context) {
 		b := in.Data().(int)
-		in.SetData((rand.Intn(1000)) + b)
+		in.SetData(1 + b)
 	})
 	flow1.To(func(in *Context) {
 		b := in.Data().(int)
-		in.SetData((rand.Intn(1000)) + b)
+		in.SetData((3) + b)
 	})
-	flow.Run(true)
+	flow.Run(func(data *Context) {
+		fmt.Println(data)
+	}, WithPoolSize(20000))
 
 	for i := 0; i < 1000; i++ {
 		func(n int) {
-			feedId := flow.Feed(n, func(data *Context) {
-				fmt.Println(data)
-			})
-			fmt.Println(feedId)
-		}(rand.Intn(100))
+			_ = flow.Feed(n)
+			//fmt.Println(feedId)
+		}(1)
 
 	}
 
 	flow.Wait()
+}
+
+func BenchmarkFlowNumber(b *testing.B) {
+
+	flow := NewFlow(20)
+	flow1 := flow.To(func(in *Context) {
+		b := in.Data().(int)
+		in.SetData(1 + b)
+		time.Sleep(time.Microsecond)
+	})
+	flow1.To(func(in *Context) {
+		b := in.Data().(int)
+		in.SetData((3) + b)
+	})
+	flow.Run(func(data *Context) {
+		//fmt.Println(data)
+	})
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_ = flow.Feed(1)
+		}
+	})
+	flow.Wait()
+
+}
+func BenchmarkFlowNumber1(b *testing.B) {
+
+	flow := NewFlow(20)
+	flow1 := flow.To(func(in *Context) {
+		b := in.Data().(int)
+		in.SetData(1 + b)
+		time.Sleep(time.Microsecond)
+	})
+	flow1.To(func(in *Context) {
+		b := in.Data().(int)
+		in.SetData((3) + b)
+	})
+	flow.Run(func(data *Context) {
+		//fmt.Println(data)
+	}, WithDisablePool())
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_ = flow.Feed(1)
+		}
+	})
+	flow.Wait()
+
 }

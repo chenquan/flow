@@ -32,14 +32,14 @@ func TestImage(t *testing.T) {
 		To(ffile.OpenFile(os.O_RDWR, 0664)).
 		To(ffile.GetSize())
 
-	newFlow.Run(false)
+	newFlow.Run(func(result *flow.Context) {
+		fmt.Println(result)
+	})
 	paths := []string{"data/", "d", "11/", "../"}
 
 	for _, path := range paths {
 
-		newFlow.Feed(path, func(result *flow.Context) {
-			fmt.Println(result)
-		})
+		newFlow.Feed(path)
 	}
 
 	newFlow.Wait()
