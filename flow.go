@@ -25,13 +25,10 @@ import (
 	"sync/atomic"
 )
 
-// ChanContext 数据流通道
+// ChanContext Data stream channel
 type ChanContext chan *Context
 
-// ResultFunc 流结果处理函数
-//type ResultFunc func(ctx *Context)
-
-// Flow 流
+// Flow Implements a flow
 type Flow struct {
 	root  Node
 	in    chan *Context
@@ -41,7 +38,7 @@ type Flow struct {
 	pools []*ants.PoolWithFunc
 }
 
-// NewFlow 新建一条流处理
+// NewFlow Create a new stream processing
 func NewFlow(buff int) *Flow {
 	f := func(in *Context) {
 
@@ -55,39 +52,40 @@ func NewFlow(buff int) *Flow {
 		buff: buff}
 }
 
-// ToNode 数据流入流节点
+// ToNode Data flows into the flow node
 func (f *Flow) ToNode(node Node) Node {
 	f.root.ToNode(node)
 	return node
 }
 
-// To 数据流入函数流节点
+// To Data flows into the function flow node
 func (f *Flow) To(funcNode Func) Node {
 	node := f.root.To(funcNode)
 	return node
 }
 
+// NodeData  Node data
 type NodeData struct {
 	node Node
 	ctx  *Context
 	out  ChanContext
 }
 
-// Run 建立流处理通道
+// Run Establish a stream processing channel
 func (f *Flow) Run(resultFunc Func, options ...Option) {
 
 	// option
 	op := loadOptions(options...)
 
 	fn := func(ctx *Context, node Node, out ChanContext) {
-		// 确保每个协程执行完毕
+		// Ensure that each coroutine is executed
 		f.wg.Add(1)
 		defer f.wg.Done()
 		node.Run(ctx)
 		if ctx.Err() == nil {
 			out <- ctx
 		} else {
-			// 将错误信息发送给输出通道
+			// Send error information to the output channel
 			f.out <- ctx
 		}
 		atomic.AddInt32(&ctx.step, 1)
@@ -155,26 +153,15 @@ func (f *Flow) Run(resultFunc Func, options ...Option) {
 
 }
 
-// Feed 喂入流处理数据
+// Feed Feed stream processing data
 func (f *Flow) Feed(data interface{}) string {
 	f.wg.Add(1)
-	ctx := NewContext(data)
+	ctx := newContext(data)
 	f.in <- ctx
 	return ctx.FlowId()
 }
 
-//// FeedData 喂入流处理数据
-//func (f *Flow) FeedData(ctx *Context, resultFunc Func) string {
-//	f.wg.Add(1)
-//	f.in <- ctx
-//	go func(resultFunc func(ctx *Context)) {
-//		resultFunc(<-f.out)
-//		f.wg.Done()
-//	}(resultFunc)
-//	return ctx.FlowId()
-//}
-
-// Wait 等待全部流结束
+// Wait Wait for all streams to end
 func (f *Flow) Wait() {
 	f.wg.Wait()
 	defer func() {

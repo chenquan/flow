@@ -50,7 +50,7 @@ func TestFlowNumber(t *testing.T) {
 	flow.Wait()
 }
 
-func BenchmarkFlowNumber(b *testing.B) {
+func BenchmarkFlowNumberWithPool(b *testing.B) {
 
 	flow := NewFlow(20)
 	flow1 := flow.To(func(in *Context) {
@@ -76,7 +76,7 @@ func BenchmarkFlowNumber(b *testing.B) {
 	flow.Wait()
 
 }
-func BenchmarkFlowNumber1(b *testing.B) {
+func BenchmarkFlowNumberWithOutPool(b *testing.B) {
 
 	flow := NewFlow(20)
 	flow1 := flow.To(func(in *Context) {

@@ -18,43 +18,52 @@
 
 package flow
 
-import "math"
+// DefaultAntsPoolSize The default capacity of the default goroutine pool
+const DefaultAntsPoolSize = 10000
 
-// DefaultAntsPoolSize 默认goroutine池的默认容量
-const DefaultAntsPoolSize = math.MaxInt32
-
+// Options Options
 type Options struct {
 	poolSize    int
-	disablePool bool // 默认启用池
+	disablePool bool // Pool is enabled by default
 }
 
 type Option func(options *Options)
 
+// loadOptions return a Options
 func loadOptions(options ...Option) *Options {
 	op := new(Options)
 	for _, option := range options {
 		option(op)
 	}
+	// set the default pool size
 	if op.poolSize <= 0 {
-		op.poolSize = 10000
+		op.poolSize = DefaultAntsPoolSize
 	}
 	return op
 }
+
+// WithOption return a Option interface
 func WithOption(options *Options) Option {
 	return func(ops *Options) {
 		ops = options
 	}
 }
+
+// WithPoolSize return a Option that set pool size
 func WithPoolSize(size int) Option {
 	return func(options *Options) {
 		options.poolSize = size
 	}
 }
+
+// WithDisablePool return a Option with pool closed
 func WithDisablePool() Option {
 	return func(options *Options) {
 		options.disablePool = true
 	}
 }
+
+// WithEnablePool return a Option
 func WithEnablePool(enable bool) Option {
 	return func(options *Options) {
 		options.disablePool = !enable

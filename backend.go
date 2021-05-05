@@ -40,7 +40,7 @@ type Context struct {
 	step   int32                  // 当前执行步骤
 	err    error                  // 错误信息
 	cache  map[string]interface{} // 缓存
-	mu     sync.RWMutex           // 保护 cache
+	mu     sync.RWMutex           // 保护
 	once   sync.Once              // err 只能被更改一次
 }
 
@@ -52,7 +52,7 @@ func (c *Context) String() string {
 	}
 }
 
-func NewContext(data interface{}) *Context {
+func newContext(data interface{}) *Context {
 	flowId := strings.ReplaceAll(uuid.Must(uuid.NewV4(), nil).String(), "-", "")
 	return &Context{
 		data:   data,
@@ -62,20 +62,24 @@ func NewContext(data interface{}) *Context {
 	}
 }
 
-// Data 返回数据
-// 并发不安全
+// Data Return data
 func (c *Context) Data() interface{} {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.data
 }
 
-// SetData 修改数据
-// 并发不安全
+// SetData Change the data
 func (c *Context) SetData(data interface{}) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.data = data
 }
 
 // Err 返回错误信息
 func (c *Context) Err() error {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.err
 }
 
@@ -84,6 +88,8 @@ func (c *Context) Err() error {
 func (c *Context) SetErr(err error) {
 	if err != nil {
 		c.once.Do(func() {
+			c.mu.Lock()
+			defer c.mu.Unlock()
 			c.err = err
 		})
 	}
